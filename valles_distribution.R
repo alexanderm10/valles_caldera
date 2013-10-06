@@ -1,4 +1,6 @@
 library(ggplot2)
+se <- function(x){
+  sd(x, na.rm=TRUE) / sqrt((length(!is.na(x))))}
 
 
 #################################################################################################
@@ -211,23 +213,231 @@ dbh.recon.vuf <- dbh.recon[,substr(names(dbh.recon), 1, 3)=="VUF"]
 write.csv(dbh.recon.vlf, "dbh.recon.vlf.csv")
 
 dbh.recon.vlf <- read.csv("dbh.recon.vlf.csv")
+summary(dbh.recon.vlf)
 
-jenkins.pine <- exp(equations[equations$model=="jenkins" & equations$spp=="pine", "beta0"] 
+dbh.recon.vlf.stack <- stack(dbh.recon.vlf)
+summary(dbh.recon.vlf.stack)
+names(dbh.recon.vlf.stack)<-c("dbh", "id")
+
+dbh.recon.vlf.stack$year <- as.numeric(row.names(dbh.recon.vlf))
+dbh.recon.vlf.stack$tree<- as.factor(substr(dbh.recon.vlf.stack$id,1,6))
+
+#applying allometric equations to individual cores in dbh.recon.(site)
+dbh.recon.vlf.stack$jenkins.pine <- exp(equations[equations$model=="jenkins" & equations$spp=="pine", "beta0"] 
                     + equations[equations$model=="jenkins" & equations$spp=="pine", "beta1"]
-                    * log(dbh.recon.vlf))
-for(i in 1:length(jenkins.pine[,1])){
-  jenkins.pine[i,"average.tree"]<- mean(jenkins.pine[i,1:length(dbh.recon.vlf)], na.rm=T) 
+                    * log(dbh.recon.vlf.stack$dbh))
+summary(dbh.recon.vlf.stack)
+
+
+dbh.recon.vlf.stack$nt.piaz <- equations[equations$model=="n/t" & equations$spp=="piaz", "beta0"] * (dbh.recon.vlf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="piaz", "beta1"])
+dbh.recon.vlf.stack$nt.pine <- equations[equations$model=="n/t" & equations$spp=="pine.spp", "beta0"] * (dbh.recon.vlf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="pine.spp", "beta1"])
+dbh.recon.vlf.stack$nt.pipo <- equations[equations$model=="n/t" & equations$spp=="pipo", "beta0"] * (dbh.recon.vlf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="pipo", "beta1"])
+dbh.recon.vlf.stack$nt.vcnp <- equations[equations$model=="n/t" & equations$spp=="vcnp", "beta0"] * (dbh.recon.vlf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="vcnp", "beta1"])
+dbh.recon.vlf.stack$nt.pine.dom <- equations[equations$model=="n/t" & equations$spp=="pine.dom", "beta0"] * (dbh.recon.vlf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="pine.dom", "beta1"])
+
+summary(dbh.recon.vlf.stack)                                         
+                                        
+
+
+vlf.bm.tree <- aggregate(dbh.recon.vlf.stack[,c("jenkins.pine","nt.piaz", "nt.pine", "nt.pipo", "nt.vcnp","nt.pine.dom")], by=list(dbh.recon.vlf.stack$tree, dbh.recon.vlf.stack$year), FUN=mean, na.rm=T)
+summary(vlf.bm.tree)
+
+names(vlf.bm.tree) <- c("tree","year",names(vlf.bm.tree[,3:8]))
+        
+summary(jenkins.pine.tree)
+
+# plotting biomass estimates of trees
+par(new=F)
+for(i in unique(vlf.bm.tree$tree)){
+  plot(vlf.bm.tree[vlf.bm.tree$tree==i, "jenkins.pine"] ~ vlf.bm.tree[jenkins.pine.tree$tree==i, "year"], 
+       xlim= range(vlf.bm.tree$year, na.rm=T), ylim=range(vlf.bm.tree$jenkins.pine, na.rm=T), lwd=.75, type="l", xlab="year", ylab="biomass kg/tree")
+  par(new=T)
 }
-summary(jenkins.pine)
 
-mean(jenkins.pine[,1], na.rm=T)
-mean(jenkins.pine[1,], na.rm=T)
+#perhaps cut at ~1970 due to the dip in the graph
+#this happened because we used NA's instead of 0's, but 0's bring their own hassles
+#namely modeling growth for the rings that we don't have and estimating pith
 
-sum(jenkins.pine[1,1:10], na.rm=T)
-ncol(jenkins.pine[1,1:10])
-sum(jenkins.pine[1,1:10], na.rm=T)/ncol(jenkins.pine[1,1:10])
+#need to aggregate all for the trees in the site to get the "average" tree for the site
+names(vlf.bm.tree)
+vlf.bm.avg <- aggregate(vlf.bm.tree[,c("jenkins.pine","nt.piaz", "nt.pine", "nt.pipo", "nt.vcnp","nt.pine.dom")], by=list(vlf.bm.tree$year), FUN=mean, na.rm=T)
+vlf.bm.avg.sd <- aggregate(vlf.bm.tree[,c("jenkins.pine","nt.piaz", "nt.pine", "nt.pipo", "nt.vcnp","nt.pine.dom")], by=list(vlf.bm.tree$year), FUN=sd, na.rm=T)
+summary(vlf.bm.avg.sd)
+summary(vlf.bm.avg)
+names(vlf.bm.avg) <- c("year", names(vlf.bm.avg[,2:7]))
+names(vlf.bm.avg.sd) <- c("year", names(vlf.bm.avg.sd[,2:7]))
+
+bm.col <- c("black", "red","blue","darkgreen", "orange", "purple", "green", "black")
+
+dim(vlf.bm.avg)
+
+par(new=F)
+for(j in 2:ncol(vlf.bm.avg)){
+  plot(vlf.bm.avg[,j]~vlf.bm.avg$year, xlim=c(1920,2011), ylim=range(vlf.bm.avg[,2:7], na.rm=T), xlab="year", ylab="kg/tree", type="l", lwd=2, col=bm.col[j])
+  par(new=T)  
+}
 
 
-summary(jenkins.pine$average.tree)
+#calc the biomass for 2012 from the measured dbh and making points for each model type
+vlf.current<- all.valles[substr(all.valles$id, 1, 3)=="VLF",]
+summary(vlf.current)
 
-warnings()
+vlf.current$jenkins.pine <- exp(equations[equations$model=="jenkins" & equations$spp=="pine", "beta0"] 
+                                + equations[equations$model=="jenkins" & equations$spp=="pine", "beta1"]
+                                * log(vlf.current$dbh))
+summary(vlf.current)
+
+
+vlf.current$nt.piaz <- equations[equations$model=="n/t" & equations$spp=="piaz", "beta0"] * (vlf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="piaz", "beta1"])
+vlf.current$nt.pine <- equations[equations$model=="n/t" & equations$spp=="pine.spp", "beta0"] * (vlf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="pine.spp", "beta1"])
+vlf.current$nt.pipo <- equations[equations$model=="n/t" & equations$spp=="pipo", "beta0"] * (vlf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="pipo", "beta1"])
+vlf.current$nt.vcnp <- equations[equations$model=="n/t" & equations$spp=="vcnp", "beta0"] * (vlf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="vcnp", "beta1"])
+vlf.current$nt.pine.dom <- equations[equations$model=="n/t" & equations$spp=="pine.dom", "beta0"] * (vlf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="pine.dom", "beta1"])
+
+summary(vlf.current)
+
+vlf.bm.means <- as.data.frame(names(vlf.current[8:ncol(vlf.current)]))
+names(vlf.bm.means) <- "bm.model"
+
+for(j in names(vlf.current[,8:ncol(vlf.current)])){
+  vlf.bm.means[vlf.bm.means$bm.model==j,"biomass"] <- mean(vlf.current[,j], na.rm=T)
+  vlf.bm.means[vlf.bm.means$bm.model==j,"SE"] <- se(vlf.current[,j])
+}
+vlf.bm.means$year <- 2012
+summary(vlf.bm.means)  
+
+
+#plotting curves and points
+par(new=F)
+for(j in 2:ncol(vlf.bm.avg)){
+  plot(vlf.bm.avg[,j]~vlf.bm.avg$year, xlim=c(1920,2011), ylim=range(vlf.bm.avg[,2:7], na.rm=T), xlab="year", ylab="kg/tree", type="l", lwd=2, col=bm.col[j])
+  par(new=T)  
+}
+
+plot(vlf.bm.means$biomass~ vlf.bm.means$year, pch=16, col=bm.col[2:7],xlim=c(1920,2011), ylim=range(vlf.bm.avg[,2:7], na.rm=T), axes=F, xlab="", ylab="")
+arrows(2012, (vlf.bm.means$biomass+vlf.bm.means$SE), 2012, (vlf.bm.means$biomass-vlf.bm.means$SE), angle=90, code=3, length=0.1, lwd=1, col=bm.col[2:7])
+legend("bottomright", legend=vlf.bm.means$bm.model, lty="solid", lwd="2", col=bm.col[2:7], bty="n", cex=0.75)
+
+#find percent differences between the measured dbh and our recon estimates
+for(j in names(vlf.current[,8:ncol(vlf.current)])){
+  vlf.bm.means[vlf.bm.means$bm.model==j,"recon"] <- vlf.bm.avg[length(vlf.bm.avg[,j]),j]
+  
+}
+
+vlf.bm.means$difference <- (vlf.bm.means$recon - vlf.bm.means$biomass )
+vlf.bm.means$perc.diff <- (vlf.bm.means$difference/vlf.bm.means$biomass)
+
+vlf.bm.means
+
+#calculating similar curves for the upper site
+
+dbh.recon.vuf.stack <- stack(dbh.recon.vuf)
+summary(dbh.recon.vuf.stack)
+names(dbh.recon.vuf.stack)<-c("dbh", "id")
+
+dbh.recon.vuf.stack$year <- as.numeric(row.names(dbh.recon.vuf))
+dbh.recon.vuf.stack$tree<- as.factor(substr(dbh.recon.vuf.stack$id,1,6))
+
+#applying allometric equations to individual cores in dbh.recon.(site)
+dbh.recon.vuf.stack$jenkins.spruce <- exp(equations[equations$model=="jenkins" & equations$spp=="spruce", "beta0"] 
+                                          + equations[equations$model=="jenkins" & equations$spp=="spruce", "beta1"]
+                                          * log(dbh.recon.vuf.stack$dbh))
+summary(dbh.recon.vuf.stack)
+
+
+dbh.recon.vuf.stack$nt.spruce <- equations[equations$model=="n/t" & equations$spp=="spruce", "beta0"] * (dbh.recon.vuf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="spruce", "beta1"])
+dbh.recon.vuf.stack$nt.vcnp <- equations[equations$model=="n/t" & equations$spp=="vcnp", "beta0"] * (dbh.recon.vuf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="vcnp", "beta1"])
+dbh.recon.vuf.stack$nt.mixed.con <- equations[equations$model=="n/t" & equations$spp=="mixed.con", "beta0"] * (dbh.recon.vuf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="mixed.con", "beta1"])
+dbh.recon.vuf.stack$nt.psme <- equations[equations$model=="n/t" & equations$spp=="psme", "beta0"] * (dbh.recon.vuf.stack$dbh)^(equations[equations$model=="n/t" & equations$spp=="psme", "beta1"])
+
+summary(dbh.recon.vuf.stack)                                         
+
+
+
+vuf.bm.tree <- aggregate(dbh.recon.vuf.stack[,c("jenkins.spruce","nt.spruce", "nt.vcnp", "nt.mixed.con", "nt.psme")], by=list(dbh.recon.vuf.stack$tree, dbh.recon.vuf.stack$year), FUN=mean, na.rm=T)
+summary(vuf.bm.tree)
+
+names(vuf.bm.tree) <- c("tree","year",names(vuf.bm.tree[,3:7]))
+
+
+# plotting biomass estimates of trees
+par(new=F)
+for(i in unique(vuf.bm.tree$tree)){
+  plot(vuf.bm.tree[vuf.bm.tree$tree==i, "jenkins.spruce"] ~ vuf.bm.tree[vuf.bm.tree$tree==i, "year"], 
+       xlim= range(vuf.bm.tree$year, na.rm=T), ylim=range(vuf.bm.tree$jenkins.spruce, na.rm=T), lwd=.75, type="l", xlab="year", ylab="biomass kg/tree")
+  par(new=T)
+}
+
+#not many big dips brought about by adding more trees to the average
+#not quite as dippy as the VLF site
+
+#need to aggregate all for the trees in the site to get the "average" tree for the site
+names(vuf.bm.tree)
+vuf.bm.avg <- aggregate(vuf.bm.tree[,c("jenkins.spruce","nt.spruce", "nt.vcnp", "nt.mixed.con","nt.psme")], by=list(vuf.bm.tree$year), FUN=mean, na.rm=T)
+vuf.bm.avg.sd <- aggregate(vuf.bm.tree[,c("jenkins.spruce","nt.spruce", "nt.vcnp", "nt.mixed.con","nt.psme")], by=list(vuf.bm.tree$year), FUN=sd, na.rm=T)
+summary(vuf.bm.avg.sd)
+summary(vuf.bm.avg)
+names(vuf.bm.avg) <- c("year", names(vuf.bm.avg[,2:6]))
+names(vuf.bm.avg.sd) <- c("year", names(vuf.bm.avg.sd[,2:6]))
+
+bm.col.spruce <- c("black", "red","blue","darkgreen", "orange", "purple", "black")
+
+dim(vuf.bm.avg)
+
+par(new=F)
+for(j in 2:ncol(vuf.bm.avg)){
+  plot(vuf.bm.avg[,j]~vuf.bm.avg$year, xlim=c(1920,2011), ylim=range(vuf.bm.avg[,2:6], na.rm=T), xlab="year", ylab="kg/tree", type="l", lwd=2, col=bm.col.spruce[j])
+  par(new=T)  
+}
+
+
+#calc the biomass for 2012 from the measured dbh and making points for each model type
+vuf.current<- all.valles[substr(all.valles$id, 1, 3)=="VUF",]
+summary(vuf.current)
+
+vuf.current$jenkins.spruce<- exp(equations[equations$model=="jenkins" & equations$spp=="spruce", "beta0"] 
+                                 + equations[equations$model=="jenkins" & equations$spp=="spruce", "beta1"]
+                                 * log(vuf.current$dbh))
+summary(vuf.current)
+
+
+vuf.current$nt.spruce <- equations[equations$model=="n/t" & equations$spp=="spruce", "beta0"] * (vuf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="spruce", "beta1"])
+vuf.current$nt.vcnp <- equations[equations$model=="n/t" & equations$spp=="vcnp", "beta0"] * (vuf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="vcnp", "beta1"])
+vuf.current$nt.mixed.con <- equations[equations$model=="n/t" & equations$spp=="mixed.con", "beta0"] * (vuf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="mixed.con", "beta1"])
+vuf.current$nt.psme <- equations[equations$model=="n/t" & equations$spp=="psme", "beta0"] * (vuf.current$dbh)^(equations[equations$model=="n/t" & equations$spp=="psme", "beta1"])
+
+summary(vuf.current)
+
+vuf.bm.means <- as.data.frame(names(vuf.current[8:ncol(vuf.current)]))
+names(vuf.bm.means) <- "bm.model"
+
+for(j in names(vuf.current[,8:ncol(vuf.current)])){
+  vuf.bm.means[vuf.bm.means$bm.model==j,"biomass"] <- mean(vuf.current[,j], na.rm=T)
+  vuf.bm.means[vuf.bm.means$bm.model==j,"SE"] <- se(vuf.current[,j])
+}
+vuf.bm.means$year <- 2012
+summary(vuf.bm.means)  
+
+names(vuf.bm.avg)
+
+#plotting curves and points
+par(new=F)
+for(j in 2:ncol(vuf.bm.avg)){
+  plot(vuf.bm.avg[,j]~vuf.bm.avg$year, xlim=c(1920,2011), ylim=range(vuf.bm.avg[,2:6], na.rm=T), xlab="year", ylab="kg/tree", type="l", lwd=2, col=bm.col.spruce[j])
+  par(new=T)  
+}
+
+plot(vuf.bm.means$biomass~ vuf.bm.means$year, pch=16, col=bm.col.spruce[2:6],xlim=c(1920,2011), ylim=range(vuf.bm.avg[,2:6], na.rm=T), axes=F, xlab="", ylab="")
+arrows(2012, (vuf.bm.means$biomass+vuf.bm.means$SE), 2012, (vuf.bm.means$biomass-vuf.bm.means$SE), angle=90, code=3, length=0.1, lwd=1, col=bm.col.spruce[2:6])
+legend("top", legend=vuf.bm.means$bm.model, lty="solid", lwd="2", col=bm.col.spruce[2:7], bty="n", cex=0.75)
+
+#find percent differences between the measured dbh and our recon estimates
+for(j in names(vuf.current[,8:ncol(vuf.current)])){
+  vuf.bm.means[vuf.bm.means$bm.model==j,"recon"] <- vuf.bm.avg[length(vuf.bm.avg[,j]),j]
+  
+}
+
+vuf.bm.means$difference <- (vuf.bm.means$recon - vuf.bm.means$biomass )
+vuf.bm.means$perc.diff <- (vuf.bm.means$difference/vuf.bm.means$biomass)
+
+vuf.bm.means
