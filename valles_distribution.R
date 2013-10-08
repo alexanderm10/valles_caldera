@@ -135,9 +135,10 @@ print(test)
 
 library(reshape2)
 
-fancy.table1 <- melt(test2, na.rm=F)
+fancy.table1 <- melt(test, na.rm=F)
 
 fancy.table2 <- dcast(fancy.table1, bin2~site)
+write.csv(fancy.table2, "valles_perc_dated_bins.csv")
 
 ###################################
 #biomass calculations
@@ -210,9 +211,9 @@ summary(equations)
 dbh.recon.vlf <- dbh.recon[,substr(names(dbh.recon), 1, 3)=="VLF"]
 dbh.recon.vuf <- dbh.recon[,substr(names(dbh.recon), 1, 3)=="VUF"]
 
-write.csv(dbh.recon.vlf, "dbh.recon.vlf.csv")
+#write.csv(dbh.recon.vlf, "dbh.recon.vlf.csv")
 
-dbh.recon.vlf <- read.csv("dbh.recon.vlf.csv")
+#dbh.recon.vlf <- read.csv("dbh.recon.vlf.csv")
 summary(dbh.recon.vlf)
 
 dbh.recon.vlf.stack <- stack(dbh.recon.vlf)
@@ -244,12 +245,12 @@ summary(vlf.bm.tree)
 
 names(vlf.bm.tree) <- c("tree","year",names(vlf.bm.tree[,3:8]))
         
-summary(jenkins.pine.tree)
+summary(vlf.bm.tree)
 
 # plotting biomass estimates of trees
 par(new=F)
 for(i in unique(vlf.bm.tree$tree)){
-  plot(vlf.bm.tree[vlf.bm.tree$tree==i, "jenkins.pine"] ~ vlf.bm.tree[jenkins.pine.tree$tree==i, "year"], 
+  plot(vlf.bm.tree[vlf.bm.tree$tree==i, "jenkins.pine"] ~ vlf.bm.tree[vlf.bm.tree$tree==i, "year"], 
        xlim= range(vlf.bm.tree$year, na.rm=T), ylim=range(vlf.bm.tree$jenkins.pine, na.rm=T), lwd=.75, type="l", xlab="year", ylab="biomass kg/tree")
   par(new=T)
 }
@@ -280,6 +281,7 @@ for(j in 2:ncol(vlf.bm.avg)){
 
 #calc the biomass for 2012 from the measured dbh and making points for each model type
 vlf.current<- all.valles[substr(all.valles$id, 1, 3)=="VLF",]
+vlf.current <- vlf.current[,1:7]
 summary(vlf.current)
 
 vlf.current$jenkins.pine <- exp(equations[equations$model=="jenkins" & equations$spp=="pine", "beta0"] 
@@ -305,7 +307,8 @@ for(j in names(vlf.current[,8:ncol(vlf.current)])){
 }
 vlf.bm.means$year <- 2012
 summary(vlf.bm.means)  
-
+vlf.bm.means
+write.csv(vlf.bm.means, "vlf_bm_means.csv")
 
 #plotting curves and points
 par(new=F)
@@ -328,8 +331,12 @@ vlf.bm.means$difference <- (vlf.bm.means$recon - vlf.bm.means$biomass )
 vlf.bm.means$perc.diff <- (vlf.bm.means$difference/vlf.bm.means$biomass)
 
 vlf.bm.means
+write.csv(vlf.bm.means,"vlf.bm.means.csv")
 
+
+###############################################
 #calculating similar curves for the upper site
+################################################
 
 dbh.recon.vuf.stack <- stack(dbh.recon.vuf)
 summary(dbh.recon.vuf.stack)
@@ -393,6 +400,7 @@ for(j in 2:ncol(vuf.bm.avg)){
 
 #calc the biomass for 2012 from the measured dbh and making points for each model type
 vuf.current<- all.valles[substr(all.valles$id, 1, 3)=="VUF",]
+vuf.current <- vuf.current[,1:7]
 summary(vuf.current)
 
 vuf.current$jenkins.spruce<- exp(equations[equations$model=="jenkins" & equations$spp=="spruce", "beta0"] 
@@ -441,3 +449,4 @@ vuf.bm.means$difference <- (vuf.bm.means$recon - vuf.bm.means$biomass )
 vuf.bm.means$perc.diff <- (vuf.bm.means$difference/vuf.bm.means$biomass)
 
 vuf.bm.means
+write.csv(vuf.bm.means, "vuf.bm.means.csv")
