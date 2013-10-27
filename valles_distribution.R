@@ -450,3 +450,7 @@ vuf.bm.means$perc.diff <- (vuf.bm.means$difference/vuf.bm.means$biomass)
 
 vuf.bm.means
 write.csv(vuf.bm.means, "vuf.bm.means.csv")
+
+##############################################
+#attempting MCMC with 2012
+
