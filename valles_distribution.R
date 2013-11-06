@@ -775,12 +775,16 @@ vlf.plot<- ggplot()  +
   geom_line(data= vlf.year, aes(x=year, y=nt.pine.spp.mean), size=1.5,colour="green") +
   geom_line(data= vlf.year, aes(x=year, y=nt.vcnp.mean), size=1.5,colour="purple") +
   geom_line(data= vlf.year, aes(x=year, y=nt.pine.dom.mean), size=1.5,colour="blue") +
+  geom_line(data= vlf.bm.avg, aes(x=year, y=jenkins.pine), size=1.5,colour="black") +
+  
   
   geom_point(aes(x=2012, y=current.nt.pipo.mean), size=4, colour="red")+
   geom_point(aes(x=2012, y=current.nt.piaz.mean), size=4, colour="orange")+
   geom_point(aes(x=2012, y=current.nt.pine.mean), size=4, colour="green")+
   geom_point(aes(x=2012, y=current.nt.vcnp.mean), size=4, colour="purple")+
   geom_point(aes(x=2012, y=current.nt.pine.dom.mean), size=4, colour="blue")+
+  geom_point(data=vlf.bm.means,aes(x=2012, y=biomass[1]), size=4, colour="black")+
+  
   
   geom_errorbar(aes(x=2012, ymin=current.nt.pipo.mean-current.nt.pipo.sd, ymax=current.nt.pipo.mean+current.nt.pipo.sd), width=0.1, colour="red") +
   geom_errorbar(aes(x=2012, ymin=current.nt.piaz.mean-current.nt.piaz.sd, ymax=current.nt.piaz.mean+current.nt.piaz.sd), width=0.1, colour="orange") +
@@ -793,7 +797,7 @@ vlf.plot<- ggplot()  +
  
 # telling what colors to make the lines for species
   #scale_color_manual(values=c("red", "blue", "orange", "green")) 
-vlf.plot
+vlf.plot+ggtitle("Lower Flux Tower")+scale_y_continuous("kg Biomass per Tree")
 
 vuf.plot<- ggplot()  +
   # plotting error ribbons
@@ -805,16 +809,18 @@ vuf.plot<- ggplot()  +
   geom_line(data=vuf.year,  aes(x=year, y=nt.spruce.mean), size=1.5,colour="red") +
   geom_line(data= vuf.year, aes(x=year, y=nt.vcnp.mean), size=1.5, colour="orange") +
   geom_line(data= vuf.year, aes(x=year, y=nt.mixed.con.mean), size=1.5, colour="green") +
+  geom_line(data= vuf.bm.avg, aes(x=year, y=jenkins.spruce), size=1.5, colour="black") +
   
   geom_point(aes(x=2012, y=current.nt.spruce.mean), size=4,, colour="red")+
   geom_point(aes(x=2012, y=current.nt.vcnp.mean), size=4,, colour="orange")+
   geom_point(aes(x=2012, y=current.nt.mixed.con.mean), size=4,, colour="green")+
+  geom_point(data= vuf.bm.means, aes(x=2012, y=biomass[1]), size=4,, colour="black")+
   
   geom_errorbar(aes(x=2012, ymin=current.nt.spruce.mean-current.nt.spruce.sd, ymax=current.nt.spruce.mean+current.nt.spruce.sd, colour="red"), width=0.1,, colour="red")+
   geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.mean-current.nt.vcnp.sd, ymax=current.nt.vcnp.mean+current.nt.vcnp.sd,colour="orange"), width=0.1,, colour="orange")+
   geom_errorbar(aes(x=2012, ymin=current.nt.mixed.con.mean-current.nt.mixed.con.sd, ymax=current.nt.mixed.con.mean+current.nt.mixed.con.sd, colour="green"), width=0.1,, colour="green")+
 
   # all of that theme stuff you can just pre-set
-  theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))+
+  theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12,))+
   scale_colour_manual(values=c("red", "orange", "green"),name= "Model",labels=c("nt.spruce", "nt.vcnp", "nt.mixed.con"))
-vuf.plot
+vuf.plot+ ggtitle("UpperFlux Tower")+scale_y_continuous("kg Biomass per Tree")
