@@ -67,12 +67,16 @@ vuf.data$Dated <- as.factor(vuf.data$Dated) # making a factor (because sometimes
 vuf.data$Spp.Dated <- as.factor(paste(vuf.data$spp, vuf.data$Dated, sep=".")) # don't worry about this (something I"m playing with)
 summary(vuf.data)
 
+vuf.data$bin.dated <- as.factor(paste(vuf.data$spp, vuf.data$Dated, sep=".")) # don't worry about this (something I"m playing with)
+
 for(i in 1:length(vlf.data$id)){
   vlf.data$Dated[i] <- ifelse(vlf.data$id[i] %in% vlf.id2, "YES", "NO")
 }
 vlf.data$Dated <- as.factor(vlf.data$Dated) # making a factor (because sometimes goes weird)
 vlf.data$Spp.Dated <- as.factor(paste(vlf.data$spp, vlf.data$Dated, sep=".")) # don't worry about this (something I"m playing with)
 summary(vlf.data)
+
+
 
 ###########
 # merging sites together into one file
@@ -82,6 +86,11 @@ summary(vuf.data)
 all.valles <- rbind(vlf.data,vuf.data)
 all.valles$site <- as.factor(substr(all.valles$id,1,3))
 summary(all.valles)
+
+all.valles$bin.dated <- as.factor(paste(all.valles$bin2, all.valles$Dated, sep=".")) # don't worry about this (something I"m playing with)
+summary(all.valles)
+summary(all.valles$bin.dated)
+ 
 
 ############
 # Reading in a file that has species names and colors
@@ -452,6 +461,62 @@ vuf.bm.means
 write.csv(vuf.bm.means, "vuf.bm.means.csv")
 
 ##############################################
+#gapfilling try
+#ramomly sample dated trees in specific bins
+#duplicate these trees in the ring width object to be used for bootstrapping in the next step
+vlf.bin.dated <- all.valles$bin.dated[substr(all.valles$id,1,3)=="VLF"]
+summary(vlf.bin.dated)
+
+vuf.bin.dated <- all.valles$bin.dated[substr(all.valles$id,1,3)=="VUF"]
+summary(vuf.bin.dated)
+
+
+
+vlf.ten <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIPO" & all.valles$bin2=="(10,12]" & all.valles$Dated=="YES" ], 3, replace=T ))
+vlf.twelve <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIPO" & all.valles$bin2=="(12,14]" & all.valles$Dated=="YES" ], 3, replace=T ))
+vlf.fourteen <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIPO" & all.valles$bin2=="(14,16]" & all.valles$Dated=="YES"], 3, replace=T )) 
+vlf.sixteen <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIPO" & all.valles$bin2=="(16,18]" & all.valles$Dated=="YES"], 3, replace=T )) 
+vlf.twenty <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIPO" & all.valles$bin2=="(20,22]" & all.valles$Dated=="YES"], 1, replace=T )) 
+vlf.twentyfour <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIPO" & all.valles$bin2=="(22,24]" & all.valles$Dated=="YES"], 1, replace=T )) 
+
+vuf.six <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIEN" & all.valles$bin2=="(6,8]" & all.valles$Dated=="YES"], 1, replace=T )) 
+vuf.eight <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIEN" & all.valles$bin2=="(8,10]" & all.valles$Dated=="YES"], 4, replace=T )) 
+vuf.ten <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIEN" & all.valles$bin2=="(10,12]" & all.valles$Dated=="YES"], 5, replace=T )) 
+vuf.twelve <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIEN" & all.valles$bin2=="(12,14]" & all.valles$Dated=="YES"], 1, replace=T )) 
+vuf.eighteen <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIEN" & all.valles$bin2=="(18,20]" & all.valles$Dated=="YES"], 1, replace=T )) 
+vuf.twenty <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIEN" & all.valles$bin2=="(20,22]" & all.valles$Dated=="YES"], 1, replace=T )) 
+vuf.twentytwo <- as.data.frame(sample(all.valles$id[all.valles$spp=="PIEN" & all.valles$bin2=="(22,24]" & all.valles$Dated=="YES"], 1, replace=T )) 
+
+write.csv(dbh.recon.vlf, "dbh.recon.vlf2.csv")
+write.csv(dbh.recon.vuf, "dbh.recon.vuf2.csv")
+
+dbh.recon.vlf2<-read.csv("dbh.recon.vlf3.csv", header=T)
+dbh.recon.vuf2<-read.csv("dbh.recon.vuf3.csv", header=T)
+
+#stacking for the lower site
+summary(dbh.recon.vlf2)
+row.names(dbh.recon.vlf2)<-dbh.recon.vlf2$year
+
+dbh.recon.vlf.stack2 <- stack(dbh.recon.vlf2[,2:ncol(dbh.recon.vlf2)])
+summary(dbh.recon.vlf.stack2)
+names(dbh.recon.vlf.stack2)<-c("dbh", "id")
+
+dbh.recon.vlf.stack2$year <- as.numeric(row.names(dbh.recon.vlf))
+dbh.recon.vlf.stack2$tree<- as.factor(substr(dbh.recon.vlf.stack2$id,1,6))
+summary(dbh.recon.vlf.stack2)
+
+#stacking for the upper site
+summary(dbh.recon.vuf2)
+row.names(dbh.recon.vuf2)<-dbh.recon.vuf2$year
+dbh.recon.vuf.stack2 <- stack(dbh.recon.vuf2[,2:ncol(dbh.recon.vuf2)])
+
+summary(dbh.recon.vuf.stack2)
+names(dbh.recon.vuf.stack2)<-c("dbh", "id")
+
+dbh.recon.vuf.stack2$year <- as.numeric(row.names(dbh.recon.vuf))
+dbh.recon.vuf.stack2$tree<- as.factor(substr(dbh.recon.vuf.stack2$id,1,6))
+summary(dbh.recon.vuf.stack2)
+summary(dbh.recon.vuf.stack)
 #attempting MCMC with 2012
 library(boot)
 DBH <- all.valles$dbh[all.valles$spp=="PIPO"]
@@ -478,13 +543,14 @@ abline(v=mean(test1)-1.96*sd(test1), lty="dashed", col="red")
 
 #################################################################
 #Getting average DBH at each site per year
-dbh.recon.vlf.tree <- aggregate(dbh.recon.vlf.stack$dbh, by=list(dbh.recon.vlf.stack$tree, dbh.recon.vlf.stack$year), FUN="mean", na.rm=T)
+dbh.recon.vlf.tree <- aggregate(dbh.recon.vlf.stack2$dbh, by=list(dbh.recon.vlf.stack2$tree, dbh.recon.vlf.stack2$year), FUN="mean", na.rm=T)
 names(dbh.recon.vlf.tree)<-c("tree", "year", "dbh")
 summary(dbh.recon.vlf.tree)
+
 vlf.dbh.year <- aggregate(dbh.recon.vlf.tree$dbh, by=list(dbh.recon.vlf.tree$year), FUN="mean", na.rm=T)
 names(vlf.dbh.year)<-c("year", "dbh")
 
-dbh.recon.vuf.tree <- aggregate(dbh.recon.vuf.stack$dbh, by=list(dbh.recon.vuf.stack$tree, dbh.recon.vuf.stack$year), FUN="mean", na.rm=T)
+dbh.recon.vuf.tree <- aggregate(dbh.recon.vuf.stack2$dbh, by=list(dbh.recon.vuf.stack2$tree, dbh.recon.vuf.stack2$year), FUN="mean", na.rm=T)
 names(dbh.recon.vuf.tree)<-c("tree", "year", "dbh")
 vuf.dbh.year <- aggregate(dbh.recon.vuf.tree$dbh, by=list(dbh.recon.vuf.tree$year), FUN="mean", na.rm=T)
 names(vuf.dbh.year)<-c("year", "dbh")
@@ -775,7 +841,7 @@ vlf.plot<- ggplot()  +
   geom_line(data= vlf.year, aes(x=year, y=nt.pine.spp.mean), size=1.5,colour="green") +
   geom_line(data= vlf.year, aes(x=year, y=nt.vcnp.mean), size=1.5,colour="purple") +
   geom_line(data= vlf.year, aes(x=year, y=nt.pine.dom.mean), size=1.5,colour="blue") +
-  geom_line(data= vlf.bm.avg, aes(x=year, y=jenkins.pine), size=1.5,colour="black") +
+  geom_line(data= vlf.bm.avg.gf, aes(x=year, y=jenkins.pine), size=1.5,colour="black") +
   
   
   geom_point(aes(x=2012, y=current.nt.pipo.mean), size=4, colour="red")+
@@ -783,7 +849,7 @@ vlf.plot<- ggplot()  +
   geom_point(aes(x=2012, y=current.nt.pine.mean), size=4, colour="green")+
   geom_point(aes(x=2012, y=current.nt.vcnp.mean), size=4, colour="purple")+
   geom_point(aes(x=2012, y=current.nt.pine.dom.mean), size=4, colour="blue")+
-  geom_point(data=vlf.bm.means,aes(x=2012, y=biomass[1]), size=4, colour="black")+
+  geom_point(data=vlf.bm.means, aes(x=2012, y=biomass[1]), size=4, colour="black")+
   
   
   geom_errorbar(aes(x=2012, ymin=current.nt.pipo.mean-current.nt.pipo.sd, ymax=current.nt.pipo.mean+current.nt.pipo.sd), width=0.1, colour="red") +
@@ -809,7 +875,7 @@ vuf.plot<- ggplot()  +
   geom_line(data=vuf.year,  aes(x=year, y=nt.spruce.mean), size=1.5,colour="red") +
   geom_line(data= vuf.year, aes(x=year, y=nt.vcnp.mean), size=1.5, colour="orange") +
   geom_line(data= vuf.year, aes(x=year, y=nt.mixed.con.mean), size=1.5, colour="green") +
-  geom_line(data= vuf.bm.avg, aes(x=year, y=jenkins.spruce), size=1.5, colour="black") +
+  geom_line(data= vuf.bm.avg.gf, aes(x=year, y=jenkins.spruce), size=1.5, colour="black") +
   
   geom_point(aes(x=2012, y=current.nt.spruce.mean), size=4,, colour="red")+
   geom_point(aes(x=2012, y=current.nt.vcnp.mean), size=4,, colour="orange")+
@@ -824,3 +890,66 @@ vuf.plot<- ggplot()  +
   theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12,))+
   scale_colour_manual(values=c("red", "orange", "green"),name= "Model",labels=c("nt.spruce", "nt.vcnp", "nt.mixed.con"))
 vuf.plot+ ggtitle("UpperFlux Tower")+scale_y_continuous("kg Biomass per Tree")
+
+###########################
+#data for simple line graphs with gapfilled data
+
+#applying allometric equations to individual cores in dbh.recon.(site)
+dbh.recon.vlf.stack3$jenkins.pine <- exp(equations[equations$model=="jenkins" & equations$spp=="pine", "beta0"] 
+                                         + equations[equations$model=="jenkins" & equations$spp=="pine", "beta1"]
+                                         * log(dbh.recon.vlf.stack3$dbh))
+summary(dbh.recon.vlf.stack3)
+
+
+dbh.recon.vlf.stack2$jenkins.pine <- exp(equations[equations$model=="jenkins" & equations$spp=="pine", "beta0"] 
+                                        + equations[equations$model=="jenkins" & equations$spp=="pine", "beta1"]
+                                        * log(dbh.recon.vlf.stack2$dbh))
+dbh.recon.vlf.stack2$nt.piaz <- equations[equations$model=="n/t" & equations$spp=="piaz", "beta0"] * (dbh.recon.vlf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="piaz", "beta1"])
+dbh.recon.vlf.stack2$nt.pine <- equations[equations$model=="n/t" & equations$spp=="pine.spp", "beta0"] * (dbh.recon.vlf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="pine.spp", "beta1"])
+dbh.recon.vlf.stack2$nt.pipo <- equations[equations$model=="n/t" & equations$spp=="pipo", "beta0"] * (dbh.recon.vlf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="pipo", "beta1"])
+dbh.recon.vlf.stack2$nt.vcnp <- equations[equations$model=="n/t" & equations$spp=="vcnp", "beta0"] * (dbh.recon.vlf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="vcnp", "beta1"])
+dbh.recon.vlf.stack2$nt.pine.dom <- equations[equations$model=="n/t" & equations$spp=="pine.dom", "beta0"] * (dbh.recon.vlf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="pine.dom", "beta1"])
+
+summary(dbh.recon.vlf.stack2)    
+
+vlf.bm.tree.gf <- aggregate(dbh.recon.vlf.stack2[,c("jenkins.pine","nt.piaz", "nt.pine", "nt.pipo", "nt.vcnp","nt.pine.dom")], by=list(dbh.recon.vlf.stack2$tree, dbh.recon.vlf.stack2$year), FUN=mean, na.rm=T)
+summary(vlf.bm.tree.gf)
+
+names(vlf.bm.tree.gf) <- c("tree","year",names(vlf.bm.tree.gf[,3:8]))
+
+summary(vlf.bm.tree.gf)
+
+names(vlf.bm.tree.gf)
+vlf.bm.avg.gf <- aggregate(vlf.bm.tree.gf[,c("jenkins.pine","nt.piaz", "nt.pine", "nt.pipo", "nt.vcnp","nt.pine.dom")], by=list(vlf.bm.tree.gf$year), FUN=mean, na.rm=T)
+vlf.bm.avg.sd.gf <- aggregate(vlf.bm.tree.gf[,c("jenkins.pine","nt.piaz", "nt.pine", "nt.pipo", "nt.vcnp","nt.pine.dom")], by=list(vlf.bm.tree.gf$year), FUN=sd, na.rm=T)
+summary(vlf.bm.avg.sd.gf)
+summary(vlf.bm.avg.gf)
+names(vlf.bm.avg.gf) <- c("year", names(vlf.bm.avg.gf[,2:7]))
+names(vlf.bm.avg.sd.gf) <- c("year", names(vlf.bm.avg.sd.gf[,2:7]))
+
+
+
+dbh.recon.vuf.stack2$jenkins.spruce <- exp(equations[equations$model=="jenkins" & equations$spp=="spruce", "beta0"] 
+                                          + equations[equations$model=="jenkins" & equations$spp=="spruce", "beta1"]
+                                          * log(dbh.recon.vuf.stack2$dbh))
+summary(dbh.recon.vuf.stack2)
+
+
+dbh.recon.vuf.stack2$nt.spruce <- equations[equations$model=="n/t" & equations$spp=="spruce", "beta0"] * (dbh.recon.vuf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="spruce", "beta1"])
+dbh.recon.vuf.stack2$nt.vcnp <- equations[equations$model=="n/t" & equations$spp=="vcnp", "beta0"] * (dbh.recon.vuf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="vcnp", "beta1"])
+dbh.recon.vuf.stack2$nt.mixed.con <- equations[equations$model=="n/t" & equations$spp=="mixed.con", "beta0"] * (dbh.recon.vuf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="mixed.con", "beta1"])
+dbh.recon.vuf.stack2$nt.psme <- equations[equations$model=="n/t" & equations$spp=="psme", "beta0"] * (dbh.recon.vuf.stack2$dbh)^(equations[equations$model=="n/t" & equations$spp=="psme", "beta1"])
+
+summary(dbh.recon.vuf.stack2)
+
+vuf.bm.tree.gf <- aggregate(dbh.recon.vuf.stack2[,c("jenkins.spruce","nt.spruce", "nt.vcnp", "nt.mixed.con", "nt.psme")], by=list(dbh.recon.vuf.stack2$tree, dbh.recon.vuf.stack2$year), FUN=mean, na.rm=T)
+summary(vuf.bm.tree.gf)
+
+names(vuf.bm.tree.gf) <- c("tree","year",names(vuf.bm.tree[,3:7]))
+
+vuf.bm.avg.gf <- aggregate(vuf.bm.tree.gf[,c("jenkins.spruce","nt.spruce", "nt.vcnp", "nt.mixed.con","nt.psme")], by=list(vuf.bm.tree.gf$year), FUN=mean, na.rm=T)
+vuf.bm.avg.sd.gf <- aggregate(vuf.bm.tree.gf[,c("jenkins.spruce","nt.spruce", "nt.vcnp", "nt.mixed.con","nt.psme")], by=list(vuf.bm.tree.gf$year), FUN=sd, na.rm=T)
+summary(vuf.bm.avg.sd.gf)
+summary(vuf.bm.avg.gf)
+names(vuf.bm.avg.gf) <- c("year", names(vuf.bm.avg.gf[,2:6]))
+names(vuf.bm.avg.sd.gf) <- c("year", names(vuf.bm.avg.sd.gf[,2:6]))
