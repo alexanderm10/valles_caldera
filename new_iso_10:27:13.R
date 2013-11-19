@@ -74,7 +74,6 @@ acf(all.oxygen2$dif.o.pipo, type="correlation",na.action=na.omit)
 pacf(all.oxygen2$dif.o.pipo,na.action=na.omit)
 
 
-
 lm.fir<- lm(all.carbon3$dif.c.fir[45:74]~all.oxygen2$dif.o.fir[45:74])
 summary(lm.fir)
 
@@ -164,6 +163,67 @@ vc.pdsi <- read.csv("VC_PDSI.csv", header=T)
 
 #snowtel data
 snotel<- read.csv("all_swe.csv", header=T)
+################################################
+#looking at the time series of the climate data
+################################################
+#mean temp
+for(j in 2:ncol(cru.mean.temp)){
+  plot(cru.mean.temp[,j]~cru.mean.temp$year, xlim=c(1965,2011), xlab="year", type="l", lwd=2)
+  abline(h=mean(cru.mean.temp[,j], na.rm=T), lty="dashed", col="red", lwd=2)
+  #par(new=T)  
+}
+
+for(j in 2:ncol(cru.mean.temp)){
+ ccf(cru.mean.temp[65:109,j], cru.mean.temp[65:109,j], type="correlation", na.action=na.pass)
+  #par(new=T)  
+}
+
+#precip
+for(j in 2:ncol(cru.precip)){
+  plot(cru.precip[,j]~cru.precip$year, xlim=c(1965,2011), xlab="year", type="l", lwd=2)
+  abline(h=mean(cru.precip[,j], na.rm=T), lty="dashed", col="red", lwd=2)
+  #par(new=T)  
+}
+
+for(j in 2:ncol(cru.precip)){
+  ccf(cru.precip[65:109,j], cru.precip[65:109,j], type="correlation", na.action=na.pass)
+  #par(new=T)  
+}
+
+#vpd
+for(j in 2:ncol(valles.vpd)){
+  plot(valles.vpd[,j]~valles.vpd$year, xlim=c(1965,2011), xlab="year", type="l", lwd=2)
+  abline(h=mean(valles.vpd[,j], na.rm=T), lty="dashed", col="red", lwd=2)
+  #par(new=T)  
+}
+
+for(j in 2:ncol(valles.vpd)){
+  ccf(valles.vpd[65:109,j], valles.vpd[65:109,j], type="correlation", na.action=na.pass)
+  #par(new=T)  
+}
+#pdsi
+for(j in 2:ncol(vc.pdsi)){
+  plot(vc.pdsi[,j]~vc.pdsi$year, xlim=c(1965,2011), xlab="year", type="l", lwd=2)
+  abline(h=mean(vc.pdsi[,j], na.rm=T), lty="dashed", col="red", lwd=2)
+  #par(new=T)  
+}
+
+for(j in 2:ncol(vc.pdsi)){
+  ccf(vc.pdsi[65:109,j], vc.pdsi[65:109,j], type="correlation", na.action=na.pass)
+  #par(new=T)  
+}
+
+#snotel data
+for(j in 2:ncol(snotel)){
+  plot(snotel[,j]~snotel$year, xlim=c(1965,2011), xlab="year", type="l", lwd=2)
+  abline(h=mean(snotel[,j], na.rm=T), lty="dashed", col="red", lwd=2)
+  #par(new=T)  
+}
+
+for(j in 2:ncol(snotel)){
+  ccf(snotel[,j], snotel[,j], type="correlation", na.action=na.pass)
+  #par(new=T)  
+}
 
 #####################################
 #Carbon Correlations
