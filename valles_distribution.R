@@ -187,6 +187,7 @@ ID2 <- ID2[order(ID2$ID),]
 all.dated2 <- all.dated2[order(row.names(all.dated2), decreasing=T),order(names(all.dated2))]
 ?order
 
+#write.csv(all.dated2, "all.dated2.csv")
 #diameter reconstructions
 dbh.recon <- all.dated2
 
@@ -517,6 +518,8 @@ dbh.recon.vuf.stack2$year <- as.numeric(row.names(dbh.recon.vuf))
 dbh.recon.vuf.stack2$tree<- as.factor(substr(dbh.recon.vuf.stack2$id,1,6))
 summary(dbh.recon.vuf.stack2)
 summary(dbh.recon.vuf.stack)
+
+
 #attempting MCMC with 2012
 library(boot)
 DBH <- all.valles$dbh[all.valles$spp=="PIPO"]
@@ -563,8 +566,8 @@ vlf.year <- unique(dbh.recon.vlf.tree$year)
 vlf.year <- data.frame(vlf.year)
 names(vlf.year)<- c("year")
 # Navar Pipo
-beta0 <- rnorm(200, mean=0.054, sd=0.004)
-beta1 <- rnorm(200, mean=2.651, sd=0.0175)
+beta0 <- rnorm(1000, mean=0.054, sd=0.004)
+beta1 <- rnorm(1000, mean=2.651, sd=0.0175)
 
 for(j in unique(dbh.recon.vlf.tree$year)){
   #for(j in 2010){
@@ -576,14 +579,15 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   #  b <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$pipo.mean"] <- mean(test)
   vlf.year[vlf.year$year==j, "n.t$pipo.sd"] <- sd(test)
+  vlf.year[vlf.year$year==j, "n.t$pipo.se"]<- se(test) 
 }
 
 summary(vlf.year)
 plot(mean~year, data=vlf.year, type="l", lwd=2)
 
 # current Navar Pipo
-beta0 <- rnorm(200, mean=0.054, sd=0.004)
-beta1 <- rnorm(200, mean=2.651, sd=0.0175)
+beta0 <- rnorm(1000, mean=0.054, sd=0.004)
+beta1 <- rnorm(1000, mean=2.651, sd=0.0175)
 
 
 DBH.list <- vlf.current$dbh
@@ -592,11 +596,12 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.pipo.mean <- mean(test)
 current.nt.pipo.sd <- sd(test)
+current.nt.pipo.se <-se(test)
 
 #######################
 #n/t$piaz
 beta0 <- 0.0527
-beta1 <- rnorm(200, mean=2.5569, sd=0.0275)
+beta1 <- rnorm(1000, mean=2.5569, sd=0.0275)
 
 for(j in unique(dbh.recon.vlf.tree$year)){
   #for(j in 2010){
@@ -608,12 +613,14 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   #  b <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$piaz.mean"] <- mean(test)
   vlf.year[vlf.year$year==j, "n.t$piaz.sd"] <- sd(test)
+  vlf.year[vlf.year$year==j, "n.t$piaz.se"] <- se(test)
+
 }
 
 summary(vlf.year)
 # current n/t$piaz
 beta0 <- 0.0527
-beta1 <- rnorm(200, mean=2.5569, sd=0.0275)
+beta1 <- rnorm(1000, mean=2.5569, sd=0.0275)
 
 DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
@@ -621,11 +628,12 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.piaz.mean <- mean(test)
 current.nt.piaz.sd <- sd(test)
+current.nt.piaz.se <- se(test)
 
 #######################
 #n/t$pine.spp
 beta0 <- 0.0597
-beta1 <- rnorm(200, mean=2.5741, sd=0.013)
+beta1 <- rnorm(1000, mean=2.5741, sd=0.013)
 
 for(j in unique(dbh.recon.vlf.tree$year)){
   #for(j in 2010){
@@ -637,13 +645,14 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   #  b <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$pine.spp.mean"] <- mean(test)
   vlf.year[vlf.year$year==j, "n.t$pine.spp.sd"] <- sd(test)
+  vlf.year[vlf.year$year==j, "n.t$pine.spp.se"] <- se(test)
 }
 
 summary(vlf.year)
 
 # current n/t$pine.spp
 beta0 <- 0.0597
-beta1 <- rnorm(200, mean=2.5741, sd=0.013)
+beta1 <- rnorm(1000, mean=2.5741, sd=0.013)
 
 DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
@@ -651,10 +660,11 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.pine.mean <- mean(test)
 current.nt.pine.sd <- sd(test)
+current.nt.pine.se <- se(test)
 #######################
 #n/t$vcnp
-beta0 <-rnorm(200, mean=0.063, sd=0.0035)
-beta1 <- rnorm(200, mean=2.615, sd=0.014)
+beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
+beta1 <- rnorm(1000, mean=2.615, sd=0.014)
 
 for(j in unique(dbh.recon.vlf.tree$year)){
   #for(j in 2010){
@@ -666,13 +676,14 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   #  b <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$vcnp.mean"] <- mean(test)
   vlf.year[vlf.year$year==j, "n.t$vcnp.sd"] <- sd(test)
+  vlf.year[vlf.year$year==j, "n.t$vcnp.se"] <- se(test)
 }
 
 summary(vlf.year)
 
 #current n/t$vcnp
-beta0 <-rnorm(200, mean=0.063, sd=0.0035)
-beta1 <- rnorm(200, mean=2.615, sd=0.014)
+beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
+beta1 <- rnorm(1000, mean=2.615, sd=0.014)
 
 DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
@@ -680,12 +691,13 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.vcnp.mean <- mean(test)
 current.nt.vcnp.sd <- sd(test)
+current.nt.vcnp.se <- se(test)
 
 
 #######################
 #n/tpine.dom
-beta0 <-rnorm(200, mean=0.0546, sd=0.00425)
-beta1 <- rnorm(200, mean=2.64, sd=0.0185)
+beta0 <-rnorm(1000, mean=0.0546, sd=0.00425)
+beta1 <- rnorm(1000, mean=2.64, sd=0.0185)
 
 for(j in unique(dbh.recon.vlf.tree$year)){
   #for(j in 2010){
@@ -697,14 +709,19 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   #  b <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$pine.dom.mean"] <- mean(test)
   vlf.year[vlf.year$year==j, "n.t$pine.dom.sd"] <- sd(test)
+  vlf.year[vlf.year$year==j, "n.t$pine.dom.se"] <- se(test)
 }
 
 summary(vlf.year)
-names(vlf.year)<- c("year","nt.pipo.mean", "nt.pipo.sd", "nt.piaz.mean", "nt.piaz.sd", "nt.pine.spp.mean", "nt.pine.spp.sd", "nt.vcnp.mean", "nt.vcnp.sd", "nt.pine.dom.mean", "nt.pine.dom.sd")
+names(vlf.year)<- c("year","nt.pipo.mean", "nt.pipo.sd", "nt.pipo.se",
+                    "nt.piaz.mean", "nt.piaz.sd", "nt.piaz.se",
+                    "nt.pine.spp.mean", "nt.pine.spp.sd", "nt.pine.spp.se",
+                    "nt.vcnp.mean", "nt.vcnp.sd", "nt.vcnp.se",
+                    "nt.pine.dom.mean", "nt.pine.dom.sd", "nt.pine.dom.se")
 
 #current n/tpine.dom
-beta0 <-rnorm(200, mean=0.0546, sd=0.00425)
-beta1 <- rnorm(200, mean=2.64, sd=0.0185)
+beta0 <-rnorm(1000, mean=0.0546, sd=0.00425)
+beta1 <- rnorm(1000, mean=2.64, sd=0.0185)
 
 DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
@@ -712,6 +729,8 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.pine.dom.mean <- mean(test)
 current.nt.pine.dom.sd <- sd(test)
+current.nt.pine.dom.se <- se(test)
+
 
 ################################################
 #bootstrap allometrics for upper flux site
@@ -722,8 +741,8 @@ vuf.year <- data.frame(vuf.year)
 names(vuf.year)<- c("year")
 
 
-beta0 <-rnorm(200, mean=0.155, sd=0.0195)
-beta1 <- rnorm(200, mean=2.334, sd=0.0315)
+beta0 <-rnorm(1000, mean=0.155, sd=0.0195)
+beta1 <- rnorm(1000, mean=2.334, sd=0.0315)
 
 for(j in unique(dbh.recon.vuf.tree$year)){
   #for(j in 2010){
@@ -735,13 +754,14 @@ for(j in unique(dbh.recon.vuf.tree$year)){
   #  b <- sd(test)
   vuf.year[vuf.year$year==j, "n.t$spruce.mean"] <- mean(test)
   vuf.year[vuf.year$year==j, "n.t$spruce.sd"] <- sd(test)
+  vuf.year[vuf.year$year==j, "n.t$spruce.se"] <- se(test)
 }
 
 summary(vuf.year)
 
 #current n/t$spruce
-beta0 <-rnorm(200, mean=0.155, sd=0.0195)
-beta1 <- rnorm(200, mean=2.334, sd=0.0315)
+beta0 <-rnorm(1000, mean=0.155, sd=0.0195)
+beta1 <- rnorm(1000, mean=2.334, sd=0.0315)
 
 DBH.list <- vuf.current$dbh
 test <- rep(NA,1000)
@@ -749,11 +769,12 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.spruce.mean <- mean(test)
 current.nt.spruce.sd <- sd(test)
+current.nt.spruce.se <- se(test)
 
 #n/t$vcnp
 
-beta0 <-rnorm(200, mean=0.063, sd=0.0035)
-beta1 <- rnorm(200, mean=2.615, sd=0.014)
+beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
+beta1 <- rnorm(1000, mean=2.615, sd=0.014)
 
 for(j in unique(dbh.recon.vuf.tree$year)){
   #for(j in 2010){
@@ -765,13 +786,14 @@ for(j in unique(dbh.recon.vuf.tree$year)){
   #  b <- sd(test)
   vuf.year[vuf.year$year==j, "n.t$vcnp.mean"] <- mean(test)
   vuf.year[vuf.year$year==j, "n.t$vcnp.sd"] <- sd(test)
+  vuf.year[vuf.year$year==j, "n.t$vcnp.se"] <- se(test)
 }
 
 summary(vuf.year)
 
 #current n/t$vcnp
-beta0 <-rnorm(200, mean=0.063, sd=0.0035)
-beta1 <- rnorm(200, mean=2.615, sd=0.014)
+beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
+beta1 <- rnorm(1000, mean=2.615, sd=0.014)
 
 DBH.list <- vuf.current$dbh
 test <- rep(NA,1000)
@@ -779,11 +801,12 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.vcnp.mean <- mean(test)
 current.nt.vcnp.sd <- sd(test)
+current.nt.vcnp.se <- se(test)
 
 #n/t$mixed.con
 
-beta0 <-rnorm(200, mean=0.0961, sd=0.01)
-beta1 <- rnorm(200, mean=2.493, sd=0.024)
+beta0 <-rnorm(1000, mean=0.0961, sd=0.01)
+beta1 <- rnorm(1000, mean=2.493, sd=0.024)
 
 for(j in unique(dbh.recon.vuf.tree$year)){
   #for(j in 2010){
@@ -795,15 +818,18 @@ for(j in unique(dbh.recon.vuf.tree$year)){
   #  b <- sd(test)
   vuf.year[vuf.year$year==j, "nt.mixed.con.mean"] <- mean(test)
   vuf.year[vuf.year$year==j, "nt.mixed.con.sd"] <- sd(test)
+  vuf.year[vuf.year$year==j, "nt.mixed.con.se"] <- se(test)
 }
 
 summary(vuf.year)
-names(vuf.year)<- c("year", "nt.spruce.mean", "nt.spruce.sd", "nt.vcnp.mean", "nt.vcnp.sd", "nt.mixed.con.mean", "nt.mixed.con.sd")
+names(vuf.year)<- c("year", "nt.spruce.mean", "nt.spruce.sd", "nt.spruce.se", 
+                    "nt.vcnp.mean", "nt.vcnp.sd", "nt.vcnp.se",
+                    "nt.mixed.con.mean", "nt.mixed.con.sd", "nt.mixed.con.se")
 
 #current n/t$mixed.con
 
-beta0 <-rnorm(200, mean=0.0961, sd=0.01)
-beta1 <- rnorm(200, mean=2.493, sd=0.024)
+beta0 <-rnorm(1000, mean=0.0961, sd=0.01)
+beta1 <- rnorm(1000, mean=2.493, sd=0.024)
 
 DBH.list <- vuf.current$dbh
 test <- rep(NA,1000)
@@ -811,6 +837,7 @@ for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sampl
 }
 current.nt.mixed.con.mean <- mean(test)
 current.nt.mixed.con.sd <- sd(test)
+current.nt.mixed.con.se <- se(test)
 
 
 
@@ -894,16 +921,16 @@ qplot(x=year, y= nt.pipo.mean,data=vlf.year, geom="line") + theme(axis.line=elem
 vlf.plot<- ggplot()  +
   # plotting total site basal area
   
-  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.pipo.mean - nt.pipo.sd, ymax=nt.pipo.mean + nt.pipo.sd), alpha=0.25, fill="red")+
-  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.piaz.mean - nt.piaz.sd, ymax=nt.piaz.mean + nt.piaz.sd), alpha=0.25, fill="orange")+
-  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.pine.spp.mean - nt.pine.spp.sd, ymax=nt.pine.spp.mean + nt.pine.spp.sd), alpha=0.25, fill="green")+
-  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.vcnp.mean - nt.vcnp.sd, ymax=nt.vcnp.mean + nt.vcnp.sd), alpha=0.25, fill="purple")+
-  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.pine.dom.mean - nt.pine.dom.sd, ymax=nt.pine.dom.mean + nt.pine.dom.sd), alpha=0.25, fill="blue")+
+  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.pipo.mean - 1.96*nt.pipo.sd, ymax=nt.pipo.mean + 1.96*nt.pipo.sd), alpha=0.15, fill="red")+
+  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.piaz.mean - 1.96*nt.piaz.sd, ymax=nt.piaz.mean + 1.96*nt.piaz.sd), alpha=0.15, fill="orange")+
+  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.pine.spp.mean - 1.96*nt.pine.spp.sd, ymax=nt.pine.spp.mean + 1.96*nt.pine.spp.sd), alpha=0.15, fill="green")+
+  #geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.vcnp.mean - 1.96*nt.vcnp.sd, ymax=nt.vcnp.mean + 1.96*nt.vcnp.sd), alpha=0.15, fill="purple")+
+  geom_ribbon(data=vlf.year, aes(x=year, ymin=nt.pine.dom.mean - 1.96*nt.pine.dom.sd, ymax=nt.pine.dom.mean + 1.96*nt.pine.dom.sd), alpha=0.15, fill="blue")+
   
   geom_line(data=vlf.year,  aes(x=year, y=nt.pipo.mean), size=1.5, colour="red") +
   geom_line(data= vlf.year, aes(x=year, y=nt.piaz.mean), size=1.5, colour="orange") +
   geom_line(data= vlf.year, aes(x=year, y=nt.pine.spp.mean), size=1.5,colour="green") +
-  geom_line(data= vlf.year, aes(x=year, y=nt.vcnp.mean), size=1.5,colour="purple") +
+  #geom_line(data= vlf.year, aes(x=year, y=nt.vcnp.mean), size=1.5,colour="purple") +
   geom_line(data= vlf.year, aes(x=year, y=nt.pine.dom.mean), size=1.5,colour="blue") +
   geom_line(data= vlf.bm.avg.gf, aes(x=year, y=jenkins.pine), size=1.5,colour="black") +
   
@@ -911,16 +938,16 @@ vlf.plot<- ggplot()  +
   geom_point(aes(x=2012, y=current.nt.pipo.mean), size=4, colour="red")+
   geom_point(aes(x=2012, y=current.nt.piaz.mean), size=4, colour="orange")+
   geom_point(aes(x=2012, y=current.nt.pine.mean), size=4, colour="green")+
-  geom_point(aes(x=2012, y=current.nt.vcnp.mean), size=4, colour="purple")+
+  #geom_point(aes(x=2012, y=current.nt.vcnp.mean), size=4, colour="purple")+
   geom_point(aes(x=2012, y=current.nt.pine.dom.mean), size=4, colour="blue")+
   geom_point(data=vlf.bm.means, aes(x=2012, y=biomass[1]), size=4, colour="black")+
   
   
-  geom_errorbar(aes(x=2012, ymin=current.nt.pipo.mean-current.nt.pipo.sd, ymax=current.nt.pipo.mean+current.nt.pipo.sd), width=0.1, colour="red") +
-  geom_errorbar(aes(x=2012, ymin=current.nt.piaz.mean-current.nt.piaz.sd, ymax=current.nt.piaz.mean+current.nt.piaz.sd), width=0.1, colour="orange") +
-  geom_errorbar(aes(x=2012, ymin=current.nt.pine.mean-current.nt.pine.sd, ymax=current.nt.pine.mean+current.nt.pine.sd), width=0.1, colour="green") +
-  geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.mean-current.nt.vcnp.sd, ymax=current.nt.vcnp.mean+current.nt.vcnp.sd), width=0.1, colour="purple") +
-  geom_errorbar(aes(x=2012, ymin=current.nt.pine.dom.mean-current.nt.pine.dom.sd, ymax=current.nt.pine.dom.mean+current.nt.pine.dom.sd), width=0.1, colour="blue") +
+  geom_errorbar(aes(x=2012, ymin=current.nt.pipo.mean-1.96*current.nt.pipo.sd, ymax=current.nt.pipo.mean+1.96*current.nt.pipo.sd), width=0.25, colour="red") +
+  geom_errorbar(aes(x=2012, ymin=current.nt.piaz.mean-1.96*current.nt.piaz.sd, ymax=current.nt.piaz.mean+1.96*current.nt.piaz.sd), width=0.25, colour="orange") +
+  geom_errorbar(aes(x=2012, ymin=current.nt.pine.mean-1.96*current.nt.pine.sd, ymax=current.nt.pine.mean+1.96*current.nt.pine.sd), width=0.25, colour="green") +
+ # geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.mean-1.96*current.nt.vcnp.sd, ymax=current.nt.vcnp.mean+1.96*current.nt.vcnp.sd), width=0.25, colour="purple") +
+  geom_errorbar(aes(x=2012, ymin=current.nt.pine.dom.mean-1.96*current.nt.pine.dom.sd, ymax=current.nt.pine.dom.mean+1.96*current.nt.pine.dom.sd), width=0.25, colour="blue") +
   # all of that theme stuff you can just pre-set
   theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))+
   scale_fill_discrete(name="Model", labels = c("nt.pipo.mean", "nt.piaz.mean", "nt.pine.spp", "nt.vcnp.mean", "nt.pine.dom.mean"))
@@ -932,9 +959,9 @@ vlf.plot+ggtitle("Lower Flux Tower")+scale_y_continuous("kg Biomass per Tree")
 vuf.plot<- ggplot()  +
   # plotting error ribbons
   
-  geom_ribbon(data=vuf.year, aes(x=year, ymin=nt.spruce.mean - nt.spruce.sd, ymax=nt.spruce.mean + nt.spruce.sd, fill="nt.spruce"), alpha=0.25,fill="red")+
-  geom_ribbon(data=vuf.year, aes(x=year, ymin=nt.vcnp.mean - nt.vcnp.sd, ymax=nt.vcnp.mean + nt.vcnp.sd, fill="nt.vcnp"), alpha=0.25, fill="orange")+
-  geom_ribbon(data=vuf.year, aes(x=year, ymin=nt.mixed.con.mean - nt.mixed.con.sd, ymax=nt.mixed.con.mean + nt.mixed.con.sd, fill="mixed.con"), alpha=0.25, fill="green")+
+  geom_ribbon(data=vuf.year, aes(x=year, ymin=nt.spruce.mean - 1.96*nt.spruce.sd, ymax=nt.spruce.mean + 1.96*nt.spruce.sd, fill="nt.spruce"), alpha=0.15,fill="red")+
+  geom_ribbon(data=vuf.year, aes(x=year, ymin=nt.vcnp.mean - 1.96*nt.vcnp.sd, ymax=nt.vcnp.mean + 1.96*nt.vcnp.sd, fill="nt.vcnp"), alpha=0.15, fill="orange")+
+  geom_ribbon(data=vuf.year, aes(x=year, ymin=nt.mixed.con.mean - 1.96*nt.mixed.con.sd, ymax=nt.mixed.con.mean + 1.96*nt.mixed.con.sd, fill="mixed.con"), alpha=0.15, fill="green")+
   
   geom_line(data=vuf.year,  aes(x=year, y=nt.spruce.mean), size=1.5,colour="red") +
   geom_line(data= vuf.year, aes(x=year, y=nt.vcnp.mean), size=1.5, colour="orange") +
@@ -946,11 +973,20 @@ vuf.plot<- ggplot()  +
   geom_point(aes(x=2012, y=current.nt.mixed.con.mean), size=4,, colour="green")+
   geom_point(data= vuf.bm.means, aes(x=2012, y=biomass[1]), size=4,, colour="black")+
   
-  geom_errorbar(aes(x=2012, ymin=current.nt.spruce.mean-current.nt.spruce.sd, ymax=current.nt.spruce.mean+current.nt.spruce.sd, colour="red"), width=0.1,, colour="red")+
-  geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.mean-current.nt.vcnp.sd, ymax=current.nt.vcnp.mean+current.nt.vcnp.sd,colour="orange"), width=0.1,, colour="orange")+
-  geom_errorbar(aes(x=2012, ymin=current.nt.mixed.con.mean-current.nt.mixed.con.sd, ymax=current.nt.mixed.con.mean+current.nt.mixed.con.sd, colour="green"), width=0.1,, colour="green")+
+  geom_errorbar(aes(x=2012, ymin=current.nt.spruce.mean-1.96*current.nt.spruce.sd, ymax=current.nt.spruce.mean+1.96*current.nt.spruce.sd, colour="red"), width=0.25,, colour="red")+
+  geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.mean-1.96*current.nt.vcnp.sd, ymax=current.nt.vcnp.mean+1.96*current.nt.vcnp.sd,colour="orange"), width=0.25, colour="orange")+
+  geom_errorbar(aes(x=2012, ymin=current.nt.mixed.con.mean-1.96*current.nt.mixed.con.sd, ymax=current.nt.mixed.con.mean+1.96*current.nt.mixed.con.sd, colour="green"), width=0.25,, colour="green")+
   
   # all of that theme stuff you can just pre-set
   theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12,))+
   scale_colour_manual(values=c("red", "orange", "green"),name= "Model",labels=c("nt.spruce", "nt.vcnp", "nt.mixed.con"))
 vuf.plot+ ggtitle("UpperFlux Tower")+scale_y_continuous("kg Biomass per Tree")
+
+#plotting sample size of each site
+counts<- read.csv("dated.counts.csv", header=T)
+
+par(mfcol=c(1,1))
+plot(counts$vuf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", main="Sample Size", col="red", ylim=range(counts$vlf.count, na.rm=T))
+par(new=T)
+plot(counts$vlf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", col="blue",ylim=range(counts$vlf.count, na.rm=T))
+legend("bottomright", legend=c("VUF", "VLF"), lty="solid", lwd="2", col=c("red", "blue"), bty="n", cex=1.5)
