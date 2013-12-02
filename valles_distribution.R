@@ -1428,6 +1428,12 @@ summary(vuf.year2)
 qplot(x=year, y= nt.pipo.sum,data=vlf.year2, geom="line") + theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12)) + scale_x_continuous(name="Year") + scale_y_continuous(name="kg Biomass / tree") + ggtitle("kg.BM/Tree") +
   geom_ribbon(aes(ymin=nt.pipo.sum - nt.pipo.sd, ymax=nt.pipo.sum + nt.pipo.sd), alpha=0.5)
 
+poster.theme<-theme(axis.line=element_line(color="black"), panel.grid.major=element_blank(), panel.grid.minor=element_blank(), panel.border=element_blank(),
+              panel.background=element_blank(), axis.text.x=element_text(angle=0, color="black", size=20),
+              axis.text.y=element_text(angle=0, color="black", size=20), axis.title.x=element_text(face="bold", size=24),
+              axis.title.y=element_text(face="bold", size=24), strip.text=element_text(face="bold", size=rel(1.75)),
+              title=element_text(face="bold", size=28))
+
 vlf.plot<- ggplot()  +
   # plotting total site basal area
   
@@ -1459,12 +1465,13 @@ geom_errorbar(aes(x=2012, ymin=current.nt.pine.sum-1.96*current.nt.pine.sd, ymax
 # geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.sum-1.96*current.nt.vcnp.sd, ymax=current.nt.vcnp.sum+1.96*current.nt.vcnp.sd), width=0.25, colour="purple") +
 geom_errorbar(aes(x=2012, ymin=current.nt.pine.dom.sum-1.96*current.nt.pine.dom.sd, ymax=current.nt.pine.dom.sum+1.96*current.nt.pine.dom.sd), width=0.25, colour="blue") +
 # all of that theme stuff you can just pre-set
-theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))+
-  scale_fill_discrete(name="Model", labels = c("nt.pipo.sum", "nt.piaz.sum", "nt.pine.spp", "nt.vcnp.sum", "nt.pine.dom.sum"))
+poster.theme
+  #theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))+
+ # scale_fill_discrete(name="Model", labels = c("nt.pipo.sum", "nt.piaz.sum", "nt.pine.spp", "nt.vcnp.sum", "nt.pine.dom.sum"))
 
 # telling what colors to make the lines for species
 #scale_color_manual(values=c("red", "blue", "orange", "green")) 
-vlf.plot+ggtitle("Lower Flux Tower")+scale_y_continuous("kg Biomass per Tree")
+vlf.plot+ggtitle("Lower Flux Tower")+scale_y_continuous("Mg Biomass m-2")+scale_x_continuous("Year")
 
 vuf.plot<- ggplot()  +
   # plotting error ribbons
@@ -1480,7 +1487,7 @@ vuf.plot<- ggplot()  +
   
   geom_point(aes(x=2012, y=current.nt.spruce.sum), size=4,, colour="red")+
   geom_point(aes(x=2012, y=current.nt.vcnp.sum), size=4,, colour="orange")+
-  geom_point(aes(x=2012, y=current.nt.mixed.con.sum), size=4,, colour="green")+
+  geom_point(aes(x=2012, y=current.nt.mixed.con.sum), size=4, colour="green")+
   #geom_point(data= vuf.bm.sums, aes(x=2012, y=biomass[1]), size=4,, colour="black")+
   
   geom_errorbar(aes(x=2012, ymin=current.nt.spruce.sum-1.96*current.nt.spruce.sd, ymax=current.nt.spruce.sum+1.96*current.nt.spruce.sd, colour="red"), width=0.25,, colour="red")+
@@ -1488,9 +1495,10 @@ vuf.plot<- ggplot()  +
   geom_errorbar(aes(x=2012, ymin=current.nt.mixed.con.sum-1.96*current.nt.mixed.con.sd, ymax=current.nt.mixed.con.sum+1.96*current.nt.mixed.con.sd, colour="green"), width=0.25,, colour="green")+
   
 # all of that theme stuff you can just pre-set
-theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12,))+
-  scale_colour_manual(values=c("red", "orange", "green"),name= "Model",labels=c("nt.spruce", "nt.vcnp", "nt.mixed.con"))
-vuf.plot+ ggtitle("UpperFlux Tower")+scale_y_continuous("kg Biomass per Tree")
+poster.theme
+  #theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12,))+
+ # scale_colour_manual(values=c("red", "orange", "green"),name= "Model",labels=c("nt.spruce", "nt.vcnp", "nt.mixed.con"))
+vuf.plot+ ggtitle("UpperFlux Tower")+scale_y_continuous("Mg Biomass m-2")+scale_x_continuous("Year")
 
 #plotting sample size of each site
 counts<- read.csv("dated.counts.csv", header=T)
@@ -1500,3 +1508,119 @@ plot(counts$vuf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", m
 par(new=T)
 plot(counts$vlf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", col="blue",ylim=range(counts$vlf.count, na.rm=T))
 legend("bottomright", legend=c("VUF", "VLF"), lty="solid", lwd="2", col=c("red", "blue"), bty="n", cex=1.5) 
+
+################################################
+#taking the mean of all the models of each site
+################################################
+names(vlf.year2)
+names(vuf.year2)
+
+#VLF
+model.mean<-as.data.frame(vlf.year2$year)
+names(model.mean)<- c("year")
+
+for(i in 1:length(vuf.year2$year)){
+  model.mean[i, "vlf.mean"] <- mean(vlf.year2[i,"nt.pipo.sum"], vlf.year2[i,"nt.piaz.sum"], vlf.year2[i,"nt.pine.spp.sum"],vlf.year2[i,"nt.pine.dom.sum"], na.rm=T)
+  model.mean[i, "vlf.sd"] <- sqrt(vlf.year2[i,"nt.pipo.sd"]^2+ vlf.year2[i,"nt.piaz.sd"]^2+ vlf.year2[i,"nt.pine.spp.sd"]^2+ vlf.year2[i,"nt.pine.dom.sd"]^2)
+}
+
+
+#VUF
+
+for(i in 1:length(vuf.year2$year)){
+  model.mean[i, "vuf.mean"] <- mean(vuf.year2[i,"nt.spruce.sum"], vuf.year2[i,"nt.vcnp.sum"], vuf.year2[i,"nt.mixed.con.sum"], na.rm=T)
+  model.mean[i, "vuf.sd"] <- sqrt(vuf.year2[i,"nt.spruce.sd"]^2+vuf.year2[i,"nt.vcnp.sd"]^2+ vuf.year2[i,"nt.mixed.con.sd"]^2)
+}
+
+model.mean
+
+current.mean<- as.data.frame(mean(current.nt.pipo.sum, current.nt.piaz.sum, current.nt.pine.sum, current.nt.pine.dom.sum))
+names(current.mean)<- c("vlf.mean")
+
+current.mean$vlf.sd <- sqrt(mean(current.nt.pipo.sd^2+ current.nt.piaz.sd^2+ current.nt.pine.sd^2+current.nt.pine.dom.sd^2))
+
+current.mean$vuf.mean<- mean(current.nt.spruce.sum, current.nt.vcnp.sum, current.nt.mixed.con.sum)
+current.mean$vuf.sd<- sqrt(current.nt.spruce.sd^2+ current.nt.vcnp.sd^2+ current.nt.mixed.con.sd^2)
+
+#plotsof mean of plots
+
+mean.plot<- ggplot()  +
+  # plotting total site basal area
+  
+  geom_ribbon(data=model.mean, aes(x=year, ymin=vlf.mean - 1.96*vlf.sd, ymax=vlf.mean + 1.96*vlf.sd), alpha=0.15, fill="red")+
+  geom_ribbon(data=model.mean, aes(x=year, ymin=vuf.mean - 1.96*vuf.sd, ymax=vuf.mean + 1.96*vuf.sd), alpha=0.15, fill="blue")+
+  
+  geom_line(data=model.mean,  aes(x=year, y=vlf.mean), size=1.5, colour="red") +
+  geom_line(data= model.mean, aes(x=year, y=vuf.mean), size=1.5, colour="blue") +
+  
+  
+  geom_point(data=current.mean, aes(x=2012, y=vlf.mean), size=4, colour="red")+
+  geom_point(data=current.mean, aes(x=2012, y=vuf.mean), size=4, colour="blue")+
+  
+  
+  geom_errorbar(data=current.mean,aes(x=2012, ymin=vlf.mean - 1.96*vlf.sd, ymax=vlf.mean + 1.96*vlf.sd), color="red")+
+  geom_errorbar(data=current.mean, aes(x=2012, ymin=vuf.mean - 1.96*vuf.sd, ymax=vuf.mean + 1.96*vuf.sd), color="blue")+
+  
+  # all of that theme stuff you can just pre-set
+  theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))
+  #scale_fill_discrete(name="Model", labels = c("nt.pipo.sum", "nt.piaz.sum", "nt.pine.spp", "nt.vcnp.sum", "nt.pine.dom.sum"))
+
+# telling what colors to make the lines for species
+#scale_color_manual(values=c("red", "blue", "orange", "green")) 
+mean.plot+ggtitle("Mean Biomass")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")
+
+#Convert all cumulative biomass to megagrams
+#divide all biomass by the area of the respective plots
+#upper site: 24m x 24m plots = 1152 m2 combined plot area
+#lower site: p1=12m x 12m; p2= 26m x 24 m; 768m2 combined plot area
+
+current.mean
+head(model.mean)
+
+current.mean$vlf.mean.area <- current.mean$vlf.mean/768
+current.mean$vlf.sd.area <- current.mean$vlf.sd/768
+current.mean$vuf.mean.area <- current.mean$vuf.mean/1152
+current.mean$vuf.sd.area <- current.mean$vuf.sd/1152
+
+model.mean$vlf.mean.area <- model.mean$vlf.mean/768
+model.mean$vlf.sd.area <- model.mean$vlf.sd/768
+model.mean$vuf.mean.area <- model.mean$vuf.mean/1152
+model.mean$vuf.sd.area <- model.mean$vuf.sd/1152
+
+mean.area.plot<- ggplot()  +
+  # plotting total site basal area
+  
+  geom_ribbon(data=model.mean, aes(x=year, ymin=(vlf.mean.area - 1.96*vlf.sd.area), ymax=(vlf.mean.area + 1.96*vlf.sd.area)), alpha=0.15, fill="red")+
+  geom_ribbon(data=model.mean, aes(x=year, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), alpha=0.15, fill="blue")+
+  
+  geom_line(data=model.mean,  aes(x=year, y=vlf.mean.area), size=1.5, colour="red") +
+  geom_line(data= model.mean, aes(x=year, y=vuf.mean.area), size=1.5, colour="blue") +
+  
+  
+  geom_point(data=current.mean, aes(x=2012, y=vlf.mean.area), size=4, colour="red")+
+  geom_point(data=current.mean, aes(x=2012, y=vuf.mean.area), size=4, colour="blue")+
+  
+  
+  geom_errorbar(data=current.mean,aes(x=2012, ymin=(vlf.mean.area - 1.96*vlf.sd.area), ymax=(vlf.mean.area + 1.96*vlf.sd.area)), color="red")+
+  geom_errorbar(data=current.mean, aes(x=2012, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), color="blue")+
+  
+  # all of that theme stuff you can just pre-set
+  poster.theme
+  #theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))
+#scale_fill_discrete(name="Model", labels = c("nt.pipo.sum", "nt.piaz.sum", "nt.pine.spp", "nt.vcnp.sum", "nt.pine.dom.sum"))
+
+# telling what colors to make the lines for species
+#scale_color_manual(values=c("red", "blue", "orange", "green")) 
+mean.area.plot+ggtitle("Modeled Biomass")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")
+
+##getting differences between modeled and measured biomass for 2012
+difference.bm<- as.data.frame(current.mean$vlf.mean.area - model.mean$vlf.mean.area[model.mean$year=="2011"])
+names(difference.bm)<- c("vlf.diff")
+
+difference.bm$vuf.diff <- current.mean$vuf.mean.area - model.mean$vuf.mean.area[model.mean$year=="2011"]
+names(difference.bm)<- c("vlf.diff", "vuf.diff")
+
+difference.bm$vlf.perc <- difference.bm$vlf.diff/current.mean$vlf.mean.area
+difference.bm$vuf.perc <- difference.bm$vuf.diff/current.mean$vuf.mean.area
+
+vuf.bm.means$perc.diff <- (vuf.bm.means$difference/vuf.bm.means$biomass)
