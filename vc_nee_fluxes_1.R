@@ -30,14 +30,24 @@ summary(vcm.fc.4)
 vcm.fc.day <- aggregate(vcm.fc.4$fc, by=list(vcm.fc.4$day, vcm.fc.4$year), FUN="sum", na.rm=T)
 summary(vcm.fc.day)
 names(vcm.fc.day)<-c("day", "year", "fc")
+vcm.fc.day.sd <- aggregate(vcm.fc.4$fc, by=list(vcm.fc.4$day, vcm.fc.4$year), FUN="sd", na.rm=T)
+names(vcm.fc.day.sd)<-c("day", "year", "sd.fc")
 
 vcm.fc.day2 <- aggregate(vcm.fc.4$fc, by=list(vcm.fc.4$day), FUN="sum", na.rm=T)
 summary(vcm.fc.day2)
 names(vcm.fc.day2)<-c("day", "fc")
+vcm.fc.day2.sd <- aggregate(vcm.fc.4$fc, by=list(vcm.fc.4$day), FUN="sd", na.rm=T)
+names(vcm.fc.day2.sd)<-c("year", "sd.fc")
 
 vcm.fc.year <- aggregate(vcm.fc.day$fc, by=list(vcm.fc.day$year), FUN="sum", na.rm=T)
 summary(vcm.fc.year)
 names(vcm.fc.year)<-c("year", "fc")
+vcm.fc.year.sd <- aggregate(vcm.fc.day$fc, by=list(vcm.fc.day$year), FUN="sd", na.rm=T)
+names(vcm.fc.year.sd)<-c("year", "sd.fc")
+
+vcm.fc.year2<- merge(vcm.fc.year, vcm.fc.year.sd)
+
+dim(vcm.fc.year)
 
 plot(vcm.fc.day2, type="l", lwd=2, xlab="Day", ylab="fc (Carbon flux?) kgC/m2", main= "Upper Flux Tower Mean")
 
@@ -94,3 +104,35 @@ plot(vcp.fc.day$fc[vcp.fc.day$year==2010]~vcp.fc.day$day[vcp.fc.day$year==2010],
 par(new=T)
 plot(vcp.fc.day$fc[vcp.fc.day$year==2011]~vcp.fc.day$day[vcp.fc.day$year==2011], type="l", lwd=2, xlab="Day", ylab="kg C/m2", col="purple", xlim=range(vcp.fc.day$day), ylim=range(vcp.fc.day$fc, na.rm=T))
 legend("topleft", legend=c("2009", "2010", "2011"), lwd=2, col=c("green", "black", "purple"))
+
+
+plot(fc~year, data=vcm.fc.year, pch=16)
+plot(fc~year, data=vcp.fc.year, pch=16)
+
+
+nee.plot<- ggplot()  +
+  # plotting total site basal area
+  
+  geom_ribbon(data=model.mean.diff, aes(x=c(2000:2012), ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), alpha=0.15, fill="black")+
+  #geom_ribbon(data=model.mean.diff, aes(x=year, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), alpha=0.15, fill="blue")+
+  
+  geom_line(data=model.mean.diff,  aes(x=c(2000:2012), y=vuf.mean.area), size=1.5, colour="black") +
+  #geom_line(data= model.mean, aes(x=year, y=vuf.mean.area), size=1.5, colour="blue") +
+  
+  
+  geom_point(data=vcm.fc.year2, aes(x=year, y=fc*-1, size=4, colour="blue"))+
+  #geom_point(data=current.mean, aes(x=2012, y=vuf.mean.area), size=4, colour="blue")+
+  
+  
+  geom_errorbar(data=vcm.fc.year2,aes(x=year, ymin=(fc - 1.96*sd.fc)*-1, ymax=(fc + 1.96*sd.fc)*-1, color="blue"))+
+  #geom_errorbar(data=current.mean, aes(x=2012, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), color="blue")+
+  
+  # all of that theme stuff you can just pre-set
+  poster.theme
+#theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))
+#scale_fill_discrete(name="Model", labels = c("nt.pipo.sum", "nt.piaz.sum", "nt.pine.spp", "nt.vcnp.sum", "nt.pine.dom.sum"))
+
+# telling what colors to make the lines for species
+#scale_color_manual(values=c("red", "blue", "orange", "green")) 
+             
+nee.plot+ggtitle("Productivity Comparison")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")

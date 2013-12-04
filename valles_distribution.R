@@ -18,11 +18,11 @@ library(dplR)
 
 vuf.dated <- read.csv("vuf_final_all.csv", header=T, row.names=1)
 head(vuf.dated)
-
+summary(vuf.dated)
 
 vlf.dated <- read.csv("vlf_final_all.csv", header=T, row.names=1)
 head(vlf.dated)
-
+summary(vlf.dated)
 
 
 # Subsetting only the sites & species I have full data for right now
@@ -164,6 +164,8 @@ all.dated[all.dated == 0] <- NA
 row.names(all.dated) <- all.dated$year
 #converting the Tsap measurements (currently in 1/100mm) to cm to match the DBH file we will use later
 all.dated2 <- all.dated[,2:ncol(all.dated)]/1000
+summary(all.dated2)
+write.csv(all.dated2, "all.dated.check.csv")
 
 # Making data frame with potential core ID & DBH
 ID <- as.data.frame(c(paste(all.valles$id, "A", sep=""), paste(all.valles$id, "B", sep=""), paste(all.valles$id, "C", sep="")))
@@ -190,7 +192,7 @@ all.dated2 <- all.dated2[order(row.names(all.dated2), decreasing=T),order(names(
 #write.csv(all.dated2, "all.dated2.csv")
 #diameter reconstructions
 dbh.recon <- all.dated2
-
+summary(dbh.recon)
 for(j in seq_along(dbh.recon)){
   # inserting 2012 DBH
   dbh.recon[1,j] <- ID2[ID2$ID==names(dbh.recon[j]),"DBH"] 
@@ -198,9 +200,11 @@ for(j in seq_along(dbh.recon)){
     dbh.recon[i,j] <- ifelse(!is.na(all.dated2[i,j]), dbh.recon[i-1,j] - all.dated2[i-1,j], NA) # subtracting the previous year's growth from DBH to get that year's DBH
   }
 }
-
+summary(dbh.recon)
 #checking for negative diameters that will need to be removed or switch to inside out orientation (call Christy)
 min(dbh.recon, na.rm=T)
+summary(dbh.recon)
+write.csv(dbh.recon, "dbh.recon.check.csv")
 
 ############################
 #applying allometric equations to the diameter reconstruction
@@ -587,6 +591,19 @@ dbh.recon.vuf.stack2$tree<- as.factor(substr(dbh.recon.vuf.stack2$id,1,6))
 summary(dbh.recon.vuf.stack2)
 summary(dbh.recon.vuf.stack)
 
+par(new=F)
+for(i in unique(dbh.recon.vuf.stack2$tree)){
+  plot(dbh.recon.vuf.stack2[dbh.recon.vuf.stack2$tree==i, "dbh"] ~ dbh.recon.vuf.stack2[dbh.recon.vuf.stack2$tree==i, "year"], 
+       xlim=range(dbh.recon.vuf.stack2$year, na.rm=T), ylim=range(dbh.recon.vuf.stack2$dbh, na.rm=T), lwd=.75, type="l", xlab="year", ylab="dbh")
+  par(new=F)
+}
+
+par(new=F)
+for(i in unique(dbh.recon.vlf.stack2$tree)){
+  plot(dbh.recon.vlf.stack2[dbh.recon.vlf.stack2$tree==i, "dbh"] ~ dbh.recon.vlf.stack2[dbh.recon.vlf.stack2$tree==i, "year"], 
+       xlim=range(dbh.recon.vlf.stack2$year, na.rm=T), ylim=range(dbh.recon.vlf.stack2$dbh, na.rm=T), lwd=.75, type="l", xlab="year", ylab="dbh")
+  par(new=T)
+}
 
 #attempting MCMC with 2012
 library(boot)
@@ -598,6 +615,9 @@ summary(all.valles$dbh)
 
 beta0 <- rnorm(200, mean=0.054, sd=0.004)
 beta1 <- rnorm(200, mean=2.651, sd=0.0175)
+summary(beta0)
+summary(beta1)
+
 test1 <- rep(NA,10000)
 for(i in 1:10000){test1[i] <- mean(sample(beta0, size=1, replace=T)*DBH^sample(beta1, size=1, replace=T))}
 
@@ -636,6 +656,8 @@ names(vlf.year)<- c("year")
 # Navar Pipo
 beta0 <- rnorm(1000, mean=0.054, sd=0.004)
 beta1 <- rnorm(1000, mean=2.651, sd=0.0175)
+summary(beta0)
+summary(beta1)
 
 for(j in unique(dbh.recon.vlf.tree$year)){
   #for(j in 2010){
@@ -645,7 +667,7 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
   #  a <- mean(test)
   #  b <- sd(test)
-  vlf.year[vlf.year$year==j, "n.t$pipo.mean"] <- mean(test)
+  vlf.year[vlf.year$year==j, "n.t$pipo.mean"] <- mean(test, na.rm=T)
   vlf.year[vlf.year$year==j, "n.t$pipo.sd"] <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$pipo.se"]<- se(test) 
 }
@@ -662,7 +684,7 @@ DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
 for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)
 }
-current.nt.pipo.mean <- mean(test)
+current.nt.pipo.mean <- mean(test, na.rm=T)
 current.nt.pipo.sd <- sd(test)
 current.nt.pipo.se <-se(test)
 
@@ -679,7 +701,7 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   for(i in 1:1000){test[i] <- mean(beta0*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
   #  a <- mean(test)
   #  b <- sd(test)
-  vlf.year[vlf.year$year==j, "n.t$piaz.mean"] <- mean(test)
+  vlf.year[vlf.year$year==j, "n.t$piaz.mean"] <- mean(test, na.rm=T)
   vlf.year[vlf.year$year==j, "n.t$piaz.sd"] <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$piaz.se"] <- se(test)
 
@@ -694,7 +716,7 @@ DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
 for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)
 }
-current.nt.piaz.mean <- mean(test)
+current.nt.piaz.mean <- mean(test, na.rm=T)
 current.nt.piaz.sd <- sd(test)
 current.nt.piaz.se <- se(test)
 
@@ -711,7 +733,7 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   for(i in 1:1000){test[i] <- mean(beta0*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
   #  a <- mean(test)
   #  b <- sd(test)
-  vlf.year[vlf.year$year==j, "n.t$pine.spp.mean"] <- mean(test)
+  vlf.year[vlf.year$year==j, "n.t$pine.spp.mean"] <- mean(test, na.rm=T)
   vlf.year[vlf.year$year==j, "n.t$pine.spp.sd"] <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$pine.spp.se"] <- se(test)
 }
@@ -726,7 +748,7 @@ DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
 for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)
 }
-current.nt.pine.mean <- mean(test)
+current.nt.pine.mean <- mean(test, na.rm=T)
 current.nt.pine.sd <- sd(test)
 current.nt.pine.se <- se(test)
 #######################
@@ -742,7 +764,7 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
   #  a <- mean(test)
   #  b <- sd(test)
-  vlf.year[vlf.year$year==j, "n.t$vcnp.mean"] <- mean(test)
+  vlf.year[vlf.year$year==j, "n.t$vcnp.mean"] <- mean(test, na.rm=T)
   vlf.year[vlf.year$year==j, "n.t$vcnp.sd"] <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$vcnp.se"] <- se(test)
 }
@@ -757,7 +779,7 @@ DBH.list <- vlf.current$dbh
 test <- rep(NA,1000)
 for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)
 }
-current.nt.vcnp.mean <- mean(test)
+current.nt.vcnp.mean <- mean(test, na.rm=T)
 current.nt.vcnp.sd <- sd(test)
 current.nt.vcnp.se <- se(test)
 
@@ -775,7 +797,7 @@ for(j in unique(dbh.recon.vlf.tree$year)){
   for(i in 1:1000){test[i] <- mean(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
   #  a <- mean(test)
   #  b <- sd(test)
-  vlf.year[vlf.year$year==j, "n.t$pine.dom.mean"] <- mean(test)
+  vlf.year[vlf.year$year==j, "n.t$pine.dom.mean"] <- mean(test, na.rm=T)
   vlf.year[vlf.year$year==j, "n.t$pine.dom.sd"] <- sd(test)
   vlf.year[vlf.year$year==j, "n.t$pine.dom.se"] <- se(test)
 }
@@ -1054,42 +1076,63 @@ vuf.plot+ ggtitle("UpperFlux Tower")+scale_y_continuous("kg Biomass per Tree")
 counts<- read.csv("dated.counts.csv", header=T)
 
 par(mfcol=c(1,1))
-plot(counts$vuf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", main="Sample Size", col="red", ylim=range(counts$vlf.count, na.rm=T))
+plot(counts$vuf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", main="Sample Size", col="blue", ylim=range(counts$vlf.count, na.rm=T))
 par(new=T)
-plot(counts$vlf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", col="blue",ylim=range(counts$vlf.count, na.rm=T))
-legend("bottomright", legend=c("VUF", "VLF"), lty="solid", lwd="2", col=c("red", "blue"), bty="n", cex=1.5) 
+plot(counts$vlf.count~counts$year, type="l", lwd=2, xlab="year", ylab="Count", col="red",ylim=range(counts$vlf.count, na.rm=T))
+legend("bottomright", legend=c("Spruce Site", "PIPO Site"), lty="solid", lwd="2", col=c("blue", "red"), bty="n", cex=1.5) 
 
 
-#Using the sum of the plot as a whole
+
+############################################################################################################
+############################################################################################################
+# Running a whole plot with the same allometric equation, taking the sum of the entire plot
+############################################################################################################
+############################################################################################################
+
 vlf.year2<-as.data.frame(vlf.year$year) 
 names(vlf.year2)<-c("year")
+
+###############################################
+###############################################
 # Navar Pipo
+###############################################
+###############################################
 beta0 <- rnorm(1000, mean=0.054, sd=0.004)
 beta1 <- rnorm(1000, mean=2.651, sd=0.0175)
 
-for(j in unique(dbh.recon.vlf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vlf.tree[!is.na(dbh.recon.vlf.tree$dbh) & dbh.recon.vlf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pipo.sum"] <- mean(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pipo.sd"] <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pipo.se"]<- se(test) 
-}
-summary(test)
-summary(vlf.year2)
-DBH.list <- dbh.recon.vlf.tree[!is.na(dbh.recon.vlf.tree$dbh) & dbh.recon.vlf.tree$year==2010, "dbh"]
-summary(DBH.list)
-length(DBH.list)
-#test <- rep(NA,1000)
-test <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)
-summary(beta1)
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vlf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vlf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
 
-summary(vlf.year2)
-plot(sum~year, data=vlf.year2, type="l", lwd=2)
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vlf.tree 
+  
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vlf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+
+vlf.year2[, "n.t$pipo.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vlf.year2[i, "n.t$pipo.sd"] <-  sd(year.sd, na.rm=T)
+}
+
 
 # current Navar Pipo
 beta0 <- rnorm(1000, mean=0.054, sd=0.004)
@@ -1104,26 +1147,47 @@ current.nt.pipo.sum <- mean(test)
 current.nt.pipo.sd <- sd(test)
 current.nt.pipo.se <-se(test)
 
-#######################
+###############################################
+###############################################
 #n/t$piaz
+###############################################
+###############################################
 beta0 <- 0.0527
 beta1 <- rnorm(1000, mean=2.5569, sd=0.0275)
 
-for(j in unique(dbh.recon.vlf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vlf.tree[!is.na(dbh.recon.vlf.tree$dbh) & dbh.recon.vlf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(beta0*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$piaz.sum"] <- mean(test)
-  vlf.year2[vlf.year2$year==j, "n.t$piaz.sd"] <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$piaz.se"] <- se(test)
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vlf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vlf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
+
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vlf.tree 
   
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vlf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+
+vlf.year2[, "n/t$piaz.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vlf.year2[i, "n/t$piaz.sd"] <-  sd(year.sd, na.rm=T)
 }
 
-summary(vlf.year2)
 # current n/t$piaz
 beta0 <- 0.0527
 beta1 <- rnorm(1000, mean=2.5569, sd=0.0275)
@@ -1136,25 +1200,47 @@ current.nt.piaz.sum <- mean(test)
 current.nt.piaz.sd <- sd(test)
 current.nt.piaz.se <- se(test)
 
-#######################
+###############################################
+###############################################
 #n/t$pine.spp
+###############################################
+###############################################
+
 beta0 <- 0.0597
 beta1 <- rnorm(1000, mean=2.5741, sd=0.013)
 
-for(j in unique(dbh.recon.vlf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vlf.tree[!is.na(dbh.recon.vlf.tree$dbh) & dbh.recon.vlf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(beta0*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pine.spp.sum"] <- mean(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pine.spp.sd"] <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pine.spp.se"] <- se(test)
-}
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vlf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vlf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
 
-summary(vlf.year2)
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vlf.tree 
+  
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vlf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+
+vlf.year2[, "n/t$pine.spp.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vlf.year2[i, "n/t$pine.spp.sd"] <-  sd(year.sd, na.rm=T)
+}
 
 # current n/t$pine.spp
 beta0 <- 0.0597
@@ -1167,25 +1253,51 @@ for(i in 1:1000){test[i] <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample
 current.nt.pine.sum <- mean(test)
 current.nt.pine.sd <- sd(test)
 current.nt.pine.se <- se(test)
-#######################
+
+
+
+###############################################
+###############################################
 #n/t$vcnp
+###############################################
+###############################################
+
 beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
 beta1 <- rnorm(1000, mean=2.615, sd=0.014)
 
-for(j in unique(dbh.recon.vlf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vlf.tree[!is.na(dbh.recon.vlf.tree$dbh) & dbh.recon.vlf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$vcnp.sum"] <- mean(test)
-  vlf.year2[vlf.year2$year==j, "n.t$vcnp.sd"] <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$vcnp.se"] <- se(test)
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vlf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vlf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
+
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vlf.tree 
+  
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vlf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+
+vlf.year2[, "n/t$vcnp.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vlf.year2[i, "n/t$vcnp.sd"] <-  sd(year.sd, na.rm=T)
 }
 
-summary(vlf.year2)
 
 #current n/t$vcnp
 beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
@@ -1200,30 +1312,51 @@ current.nt.vcnp.sd <- sd(test)
 current.nt.vcnp.se <- se(test)
 
 
-#######################
+###############################################
+###############################################
 #n/tpine.dom
+###############################################
+###############################################
 beta0 <-rnorm(1000, mean=0.0546, sd=0.00425)
 beta1 <- rnorm(1000, mean=2.64, sd=0.0185)
 
-for(j in unique(dbh.recon.vlf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vlf.tree[!is.na(dbh.recon.vlf.tree$dbh) & dbh.recon.vlf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pine.dom.sum"] <- mean(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pine.dom.sd"] <- sd(test)
-  vlf.year2[vlf.year2$year==j, "n.t$pine.dom.se"] <- se(test)
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vlf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vlf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
+
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vlf.tree 
+  
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vlf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+
+vlf.year2[, "n/tpine.dom.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vlf.year2[i, "n/tpine.dom.sd"] <-  sd(year.sd, na.rm=T)
 }
 
 summary(vlf.year2)
-names(vlf.year2)<- c("year","nt.pipo.sum", "nt.pipo.sd", "nt.pipo.se",
-                     "nt.piaz.sum", "nt.piaz.sd", "nt.piaz.se",
-                     "nt.pine.spp.sum", "nt.pine.spp.sd", "nt.pine.spp.se",
-                     "nt.vcnp.sum", "nt.vcnp.sd", "nt.vcnp.se",
-                     "nt.pine.dom.sum", "nt.pine.dom.sd", "nt.pine.dom.se")
+names(vlf.year2)<- c("year","nt.pipo.sum", "nt.pipo.sd","nt.piaz.sum", "nt.piaz.sd",
+                     "nt.pine.spp.sum", "nt.pine.spp.sd", "nt.vcnp.sum", "nt.vcnp.sd",
+                     "nt.pine.dom.sum", "nt.pine.dom.sd")
 
 #current n/tpine.dom
 beta0 <-rnorm(1000, mean=0.0546, sd=0.00425)
@@ -1241,9 +1374,12 @@ current.nt.pine.dom.se <- se(test)
 ################################################
 #bootstrap allometrics for upper flux site
 ###############################################
+###############################################
 #n/t$spruce
-vuf.year22<- as.data.frame(vuf.year2$year)
-names(vuf.year22)<-c("year")
+###############################################
+###############################################
+vuf.year2<- as.data.frame(vuf.year2$year)
+names(vuf.year2)<-c("year")
 
 vuf.year2 <- unique(dbh.recon.vuf.tree$year)
 vuf.year2 <- data.frame(vuf.year2)
@@ -1253,20 +1389,41 @@ names(vuf.year2)<- c("year")
 beta0 <-rnorm(1000, mean=0.155, sd=0.0195)
 beta1 <- rnorm(1000, mean=2.334, sd=0.0315)
 
-for(j in unique(dbh.recon.vuf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vuf.tree[!is.na(dbh.recon.vuf.tree$dbh) & dbh.recon.vuf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vuf.year2[vuf.year2$year==j, "n.t$spruce.sum"] <- mean(test)
-  vuf.year2[vuf.year2$year==j, "n.t$spruce.sd"] <- sd(test)
-  vuf.year2[vuf.year2$year==j, "n.t$spruce.se"] <- se(test)
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vuf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vuf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
+
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vuf.tree 
+  
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vuf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+vuf.year2<-as.data.frame(vuf.year$year) 
+names(vuf.year2)<-c("year")
+
+vuf.year2[, "n/t$spruce.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vuf.year2[i, "n/t$spruce.sd"] <-  sd(year.sd, na.rm=T)
 }
 
-summary(vuf.year2)
 
 #current n/t$spruce
 beta0 <-rnorm(1000, mean=0.155, sd=0.0195)
@@ -1280,25 +1437,47 @@ current.nt.spruce.sum <- mean(test)
 current.nt.spruce.sd <- sd(test)
 current.nt.spruce.se <- se(test)
 
+###############################################
+###############################################
 #n/t$vcnp
-
+###############################################
+###############################################
 beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
 beta1 <- rnorm(1000, mean=2.615, sd=0.014)
 
-for(j in unique(dbh.recon.vuf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vuf.tree[!is.na(dbh.recon.vuf.tree$dbh) & dbh.recon.vuf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vuf.year2[vuf.year2$year==j, "n.t$vcnp.sum"] <- mean(test)
-  vuf.year2[vuf.year2$year==j, "n.t$vcnp.sd"] <- sd(test)
-  vuf.year2[vuf.year2$year==j, "n.t$vcnp.se"] <- se(test)
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vuf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vuf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
+
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vuf.tree 
+  
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vuf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+
+vuf.year2[, "n/t$vcnp.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vuf.year2[i, "n/t$vcnp.sd"] <-  sd(year.sd, na.rm=T)
 }
 
-summary(vuf.year2)
 
 #current n/t$vcnp
 beta0 <-rnorm(1000, mean=0.063, sd=0.0035)
@@ -1312,28 +1491,50 @@ current.nt.vcnp.sum <- mean(test)
 current.nt.vcnp.sd <- sd(test)
 current.nt.vcnp.se <- se(test)
 
+###############################################
+###############################################
 #n/t$mixed.con
-
+###############################################
+###############################################
 beta0 <-rnorm(1000, mean=0.0961, sd=0.01)
 beta1 <- rnorm(1000, mean=2.493, sd=0.024)
 
-for(j in unique(dbh.recon.vuf.tree$year)){
-  #for(j in 2010){
-  #  DBH.list <- 10
-  DBH.list <- dbh.recon.vuf.tree[!is.na(dbh.recon.vuf.tree$dbh) & dbh.recon.vuf.tree$year==j, "dbh"]
-  test <- rep(NA,1000)
-  for(i in 1:1000){test[i] <- sum(sample(beta0, size=1, replace=T)*DBH.list^sample(beta1, size=1, replace=T), na.rm=T)}
-  #  a <- mean(test)
-  #  b <- sd(test)
-  vuf.year2[vuf.year2$year==j, "nt.mixed.con.sum"] <- mean(test)
-  vuf.year2[vuf.year2$year==j, "nt.mixed.con.sd"] <- sd(test)
-  vuf.year2[vuf.year2$year==j, "nt.mixed.con.se"] <- se(test)
-}
+# Creating a data frames where runs will get stored; using year to get the right number of rows (a crude way of doing it)
+all.runs<-as.data.frame(vuf.year$year) 
+all.runs[,1] <- NA #overwriting year with NA because I think it's easier if we don't have a year column
+row.names(all.runs) <- vuf.year$year #just to help, adding rownames that match the year
+names(all.runs)<-c("run1")
 
+# starting the loop with the number of iterations you want
+for(i in 1:1000){
+  # creating a data frame where the Biomass will go; this will get overwritten in each run
+  boot.run <- dbh.recon.vuf.tree 
+  
+  # running the allometric equation pulling randomly from the beta distribution; remember to check before you run that these are not impossible numbers
+  boot.run$biomass <- sample(beta0, size=1, replace=T)*dbh.recon.vuf.tree$dbh^sample(beta1, size=1, replace=T)
+  
+  # Summing biomass for each year via aggregate
+  boot.sum <- aggregate(boot.run$biomass, by=list(boot.run$year), FUN=sum, na.rm=T)
+  names(boot.sum) <- c("year", "biomass.total")
+  
+  # storing each run into a data frame; i+1 shoudl mean first run gets stored in column 2, etc; this may not work and will need ot be tweaked
+  all.runs[,i] <- boot.sum$biomass.total
+} # close loop; final product we're interested in is the all.runs
+
+dim(all.runs) # check the dimensions of all.runs; rows should equal number of years; columns should be number of iterations (1000)
+
+# Creating your final data frame with the summarized bootstrap data
+
+vuf.year2[, "n/t$mixed.con.sum"] <- rowMeans(all.runs, na.rm=T)
+
+for(i in 1:length(all.runs[,1])){
+  year.sd <- as.vector(all.runs[i,])
+  vuf.year2[i, "n/t$mixed.con.sd"] <-  sd(year.sd, na.rm=T)
+}
 summary(vuf.year2)
-names(vuf.year2)<- c("year", "nt.spruce.sum", "nt.spruce.sd", "nt.spruce.se", 
-                     "nt.vcnp.sum", "nt.vcnp.sd", "nt.vcnp.se",
-                     "nt.mixed.con.sum", "nt.mixed.con.sd", "nt.mixed.con.se")
+names(vuf.year2)<- c("year", "nt.spruce.sum", "nt.spruce.sd", 
+                     "nt.vcnp.sum", "nt.vcnp.sd", 
+                     "nt.mixed.con.sum", "nt.mixed.con.sd")
 
 #current n/t$mixed.con
 
@@ -1434,36 +1635,39 @@ poster.theme<-theme(axis.line=element_line(color="black"), panel.grid.major=elem
               axis.title.y=element_text(face="bold", size=24), strip.text=element_text(face="bold", size=rel(1.75)),
               title=element_text(face="bold", size=28))
 
+vlf.year3<- vlf.year2[,2:ncol(vlf.year2)]/768
+vlf.year3$year<- vlf.year2$year
+
 vlf.plot<- ggplot()  +
   # plotting total site basal area
   
-  geom_ribbon(data=vlf.year2, aes(x=year, ymin=nt.pipo.sum - 1.96*nt.pipo.sd, ymax=nt.pipo.sum + 1.96*nt.pipo.sd), alpha=0.15, fill="red")+
-  geom_ribbon(data=vlf.year2, aes(x=year, ymin=nt.piaz.sum - 1.96*nt.piaz.sd, ymax=nt.piaz.sum + 1.96*nt.piaz.sd), alpha=0.15, fill="orange")+
-  geom_ribbon(data=vlf.year2, aes(x=year, ymin=nt.pine.spp.sum - 1.96*nt.pine.spp.sd, ymax=nt.pine.spp.sum + 1.96*nt.pine.spp.sd), alpha=0.15, fill="green")+
+  geom_ribbon(data=vlf.year3, aes(x=year, ymin=nt.pipo.sum - 1.96*nt.pipo.sd, ymax=nt.pipo.sum + 1.96*nt.pipo.sd), alpha=0.15, fill="red")+
+  geom_ribbon(data=vlf.year3, aes(x=year, ymin=nt.piaz.sum - 1.96*nt.piaz.sd, ymax=nt.piaz.sum + 1.96*nt.piaz.sd), alpha=0.15, fill="orange")+
+  geom_ribbon(data=vlf.year3, aes(x=year, ymin=nt.pine.spp.sum - 1.96*nt.pine.spp.sd, ymax=nt.pine.spp.sum + 1.96*nt.pine.spp.sd), alpha=0.15, fill="green")+
   #geom_ribbon(data=vlf.year2, aes(x=year, ymin=nt.vcnp.sum - 1.96*nt.vcnp.sd, ymax=nt.vcnp.sum + 1.96*nt.vcnp.sd), alpha=0.15, fill="purple")+
-  geom_ribbon(data=vlf.year2, aes(x=year, ymin=nt.pine.dom.sum - 1.96*nt.pine.dom.sd, ymax=nt.pine.dom.sum + 1.96*nt.pine.dom.sd), alpha=0.15, fill="blue")+
+  geom_ribbon(data=vlf.year3, aes(x=year, ymin=nt.pine.dom.sum - 1.96*nt.pine.dom.sd, ymax=nt.pine.dom.sum + 1.96*nt.pine.dom.sd), alpha=0.15, fill="blue")+
   
-  geom_line(data=vlf.year2,  aes(x=year, y=nt.pipo.sum), size=1.5, colour="red") +
-  geom_line(data= vlf.year2, aes(x=year, y=nt.piaz.sum), size=1.5, colour="orange") +
-  geom_line(data= vlf.year2, aes(x=year, y=nt.pine.spp.sum), size=1.5,colour="green") +
+  geom_line(data=vlf.year3,  aes(x=year, y=nt.pipo.sum), size=1.5, colour="red") +
+  geom_line(data= vlf.year3, aes(x=year, y=nt.piaz.sum), size=1.5, colour="orange") +
+  geom_line(data= vlf.year3, aes(x=year, y=nt.pine.spp.sum), size=1.5,colour="green") +
   #geom_line(data= vlf.year2, aes(x=year, y=nt.vcnp.sum), size=1.5,colour="purple") +
-  geom_line(data= vlf.year2, aes(x=year, y=nt.pine.dom.sum), size=1.5,colour="blue") +
+  geom_line(data= vlf.year3, aes(x=year, y=nt.pine.dom.sum), size=1.5,colour="blue") +
   #geom_line(data= vlf.bm.avg.gf, aes(x=year, y=jenkins.pine), size=1.5,colour="black") +
   
   
-  geom_point(aes(x=2012, y=current.nt.pipo.sum), size=4, colour="red")+
-  geom_point(aes(x=2012, y=current.nt.piaz.sum), size=4, colour="orange")+
-  geom_point(aes(x=2012, y=current.nt.pine.sum), size=4, colour="green")+
+  geom_point(aes(x=2012, y=current.nt.pipo.sum/768), size=4, colour="red")+
+  geom_point(aes(x=2012, y=current.nt.piaz.sum/768), size=4, colour="orange")+
+  geom_point(aes(x=2012, y=current.nt.pine.sum/768), size=4, colour="green")+
   #geom_point(aes(x=2012, y=current.nt.vcnp.sum), size=4, colour="purple")+
-  geom_point(aes(x=2012, y=current.nt.pine.dom.sum), size=4, colour="blue")+
+  geom_point(aes(x=2012, y=current.nt.pine.dom.sum/768), size=4, colour="blue")+
   #geom_point(data=vlf.bm.sums, aes(x=2012, y=biomass[1]), size=4, colour="black")+
   
   
-geom_errorbar(aes(x=2012, ymin=current.nt.pipo.sum-1.96*current.nt.pipo.sd, ymax=current.nt.pipo.sum+1.96*current.nt.pipo.sd), width=0.25, colour="red") +
-geom_errorbar(aes(x=2012, ymin=current.nt.piaz.sum-1.96*current.nt.piaz.sd, ymax=current.nt.piaz.sum+1.96*current.nt.piaz.sd), width=0.25, colour="orange") +
-geom_errorbar(aes(x=2012, ymin=current.nt.pine.sum-1.96*current.nt.pine.sd, ymax=current.nt.pine.sum+1.96*current.nt.pine.sd), width=0.25, colour="green") +
+geom_errorbar(aes(x=2012, ymin=(current.nt.pipo.sum/768)-1.96*(current.nt.pipo.sd/768), ymax=(current.nt.pipo.sum/768)+1.96*(current.nt.pipo.sd/768)), width=0.25, colour="red") +
+geom_errorbar(aes(x=2012, ymin=(current.nt.piaz.sum/768)-1.96*(current.nt.piaz.sd/768), ymax=(current.nt.piaz.sum/768)+1.96*(current.nt.piaz.sd/768)), width=0.25, colour="orange") +
+geom_errorbar(aes(x=2012, ymin=(current.nt.pine.sum/768)-1.96*(current.nt.pine.sd/768), ymax=(current.nt.pine.sum/768)+1.96*(current.nt.pine.sd/768)), width=0.25, colour="green") +
 # geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.sum-1.96*current.nt.vcnp.sd, ymax=current.nt.vcnp.sum+1.96*current.nt.vcnp.sd), width=0.25, colour="purple") +
-geom_errorbar(aes(x=2012, ymin=current.nt.pine.dom.sum-1.96*current.nt.pine.dom.sd, ymax=current.nt.pine.dom.sum+1.96*current.nt.pine.dom.sd), width=0.25, colour="blue") +
+geom_errorbar(aes(x=2012, ymin=(current.nt.pine.dom.sum/768)-1.96*(current.nt.pine.dom.sd/768), ymax=(current.nt.pine.dom.sum/768)+1.96*(current.nt.pine.dom.sd/768)), width=0.25, colour="blue") +
 # all of that theme stuff you can just pre-set
 poster.theme
   #theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))+
@@ -1471,34 +1675,37 @@ poster.theme
 
 # telling what colors to make the lines for species
 #scale_color_manual(values=c("red", "blue", "orange", "green")) 
-vlf.plot+ggtitle("Lower Flux Tower")+scale_y_continuous("Mg Biomass m-2")+scale_x_continuous("Year")
+vlf.plot+ggtitle("Lower Flux Tower")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")
+
+vuf.year3<-as.data.frame(vuf.year2[,2:ncol(vuf.year2)]/1152)
+vuf.year3$year<-vuf.year2$year
 
 vuf.plot<- ggplot()  +
   # plotting error ribbons
   
-  geom_ribbon(data=vuf.year2, aes(x=year, ymin=nt.spruce.sum - 1.96*nt.spruce.sd, ymax=nt.spruce.sum + 1.96*nt.spruce.sd, fill="nt.spruce"), alpha=0.15,fill="red")+
-  geom_ribbon(data=vuf.year2, aes(x=year, ymin=nt.vcnp.sum - 1.96*nt.vcnp.sd, ymax=nt.vcnp.sum + 1.96*nt.vcnp.sd, fill="nt.vcnp"), alpha=0.15, fill="orange")+
-  geom_ribbon(data=vuf.year2, aes(x=year, ymin=nt.mixed.con.sum - 1.96*nt.mixed.con.sd, ymax=nt.mixed.con.sum + 1.96*nt.mixed.con.sd, fill="mixed.con"), alpha=0.15, fill="green")+
+  geom_ribbon(data=vuf.year3, aes(x=year, ymin=nt.spruce.sum - 1.96*nt.spruce.sd, ymax=nt.spruce.sum + 1.96*nt.spruce.sd, fill="nt.spruce"), alpha=0.15,fill="red")+
+  geom_ribbon(data=vuf.year3, aes(x=year, ymin=nt.vcnp.sum - 1.96*nt.vcnp.sd, ymax=nt.vcnp.sum + 1.96*nt.vcnp.sd, fill="nt.vcnp"), alpha=0.15, fill="orange")+
+  geom_ribbon(data=vuf.year3, aes(x=year, ymin=nt.mixed.con.sum - 1.96*nt.mixed.con.sd, ymax=nt.mixed.con.sum + 1.96*nt.mixed.con.sd, fill="mixed.con"), alpha=0.15, fill="green")+
   
-  geom_line(data=vuf.year2,  aes(x=year, y=nt.spruce.sum), size=1.5,colour="red") +
-  geom_line(data= vuf.year2, aes(x=year, y=nt.vcnp.sum), size=1.5, colour="orange") +
-  geom_line(data= vuf.year2, aes(x=year, y=nt.mixed.con.sum), size=1.5, colour="green") +
+  geom_line(data=vuf.year3,  aes(x=year, y=nt.spruce.sum), size=1.5,colour="red") +
+  geom_line(data= vuf.year3, aes(x=year, y=nt.vcnp.sum), size=1.5, colour="orange") +
+  geom_line(data= vuf.year3, aes(x=year, y=nt.mixed.con.sum), size=1.5, colour="green") +
   #geom_line(data= vuf.bm.avg.gf, aes(x=year, y=jenkins.spruce), size=1.5, colour="black") +
   
-  geom_point(aes(x=2012, y=current.nt.spruce.sum), size=4,, colour="red")+
-  geom_point(aes(x=2012, y=current.nt.vcnp.sum), size=4,, colour="orange")+
-  geom_point(aes(x=2012, y=current.nt.mixed.con.sum), size=4, colour="green")+
+  geom_point(aes(x=2012, y=current.nt.spruce.sum/1152), size=4,, colour="red")+
+  geom_point(aes(x=2012, y=current.nt.vcnp.sum/1152), size=4,, colour="orange")+
+  geom_point(aes(x=2012, y=current.nt.mixed.con.sum/1152), size=4, colour="green")+
   #geom_point(data= vuf.bm.sums, aes(x=2012, y=biomass[1]), size=4,, colour="black")+
   
-  geom_errorbar(aes(x=2012, ymin=current.nt.spruce.sum-1.96*current.nt.spruce.sd, ymax=current.nt.spruce.sum+1.96*current.nt.spruce.sd, colour="red"), width=0.25,, colour="red")+
-  geom_errorbar(aes(x=2012, ymin=current.nt.vcnp.sum-1.96*current.nt.vcnp.sd, ymax=current.nt.vcnp.sum+1.96*current.nt.vcnp.sd,colour="orange"), width=0.25, colour="orange")+
-  geom_errorbar(aes(x=2012, ymin=current.nt.mixed.con.sum-1.96*current.nt.mixed.con.sd, ymax=current.nt.mixed.con.sum+1.96*current.nt.mixed.con.sd, colour="green"), width=0.25,, colour="green")+
+  geom_errorbar(aes(x=2012, ymin=(current.nt.spruce.sum/1152)-1.96*(current.nt.spruce.sd/1152), ymax=(current.nt.spruce.sum/1152)+1.96*(current.nt.spruce.sd/1152), colour="red"), width=0.25,, colour="red")+
+  geom_errorbar(aes(x=2012, ymin=(current.nt.vcnp.sum/1152)-1.96*(current.nt.vcnp.sd/1152), ymax=(current.nt.vcnp.sum/1152)+1.96*(current.nt.vcnp.sd/1152),colour="orange"), width=0.25, colour="orange")+
+  geom_errorbar(aes(x=2012, ymin=(current.nt.mixed.con.sum/1152)-1.96*(current.nt.mixed.con.sd/1152), ymax=(current.nt.mixed.con.sum/1152)+1.96*(current.nt.mixed.con.sd/1152), colour="green"), width=0.25,, colour="green")+
   
 # all of that theme stuff you can just pre-set
 poster.theme
   #theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12,))+
  # scale_colour_manual(values=c("red", "orange", "green"),name= "Model",labels=c("nt.spruce", "nt.vcnp", "nt.mixed.con"))
-vuf.plot+ ggtitle("UpperFlux Tower")+scale_y_continuous("Mg Biomass m-2")+scale_x_continuous("Year")
+vuf.plot+ ggtitle("Upper Flux Tower")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")
 
 #plotting sample size of each site
 counts<- read.csv("dated.counts.csv", header=T)
@@ -1519,7 +1726,7 @@ names(vuf.year2)
 model.mean<-as.data.frame(vlf.year2$year)
 names(model.mean)<- c("year")
 
-for(i in 1:length(vuf.year2$year)){
+for(i in 1:length(vlf.year2$year)){
   model.mean[i, "vlf.mean"] <- mean(vlf.year2[i,"nt.pipo.sum"], vlf.year2[i,"nt.piaz.sum"], vlf.year2[i,"nt.pine.spp.sum"],vlf.year2[i,"nt.pine.dom.sum"], na.rm=T)
   model.mean[i, "vlf.sd"] <- sqrt(vlf.year2[i,"nt.pipo.sd"]^2+ vlf.year2[i,"nt.piaz.sd"]^2+ vlf.year2[i,"nt.pine.spp.sd"]^2+ vlf.year2[i,"nt.pine.dom.sd"]^2)
 }
@@ -1624,3 +1831,96 @@ difference.bm$vlf.perc <- difference.bm$vlf.diff/current.mean$vlf.mean.area
 difference.bm$vuf.perc <- difference.bm$vuf.diff/current.mean$vuf.mean.area
 
 vuf.bm.means$perc.diff <- (vuf.bm.means$difference/vuf.bm.means$biomass)
+
+########################################################################################
+#Calculating the Interannual differences in the modeled biomass means
+########################################################################################
+head(model.mean)
+inter.diff<-as.data.frame(model.mean)
+#names(inter.diff)<-c("year")
+
+model.mean[model.mean == 0] <- NA
+
+inter.diff[,2:ncol(inter.diff)]<- NA
+
+for(j in 2:ncol(model.mean)) {
+    for( i in 2:length(inter.diff[,j])){
+      inter.diff[i,j] <- ifelse(i-1 > 0, model.mean[i,j] - model.mean[i-1,j], NA) 
+    }
+         }
+model.mean    
+inter.diff2<-inter.diff[,2:ncol(inter.diff)]*1000   
+inter.diff2$year <- inter.diff$year
+
+
+plot(inter.diff2$vlf.mean.area ~ inter.diff2$year, type="l", xlim=c(2000,2011))
+plot(inter.diff2$vuf.mean.area ~ inter.diff2$year, type="l", xlim=c(2000,2011))
+
+##############################
+#need interannual differences for each site
+#to do this need to take the difference of each cumulative model and THEN take the mean
+
+vlf.year2[vlf.year2==0]<-NA
+vuf.year2[vuf.year2==0]<-NA
+
+#vlf.year2[vlf.year2==0] <-NA
+vlf.model.diff<- as.data.frame(vlf.year2)
+
+vlf.model.diff[,2:ncol(vlf.model.diff)]<-NA
+
+
+
+for(j in 2:ncol(vlf.year2)) {
+  for( i in 2:length(vlf.model.diff[,j])){
+    vlf.model.diff[i,j] <- ifelse(i-1 > 0, vlf.year2[i,j] - vlf.year2[i-1,j], NA) 
+  }
+}
+
+model.mean.diff<-as.data.frame(model.mean)
+model.mean.diff[,2:ncol(model.mean.diff)]<-NA
+
+for(i in 1:length(vlf.model.diff$year)){
+  model.mean.diff[i, "vlf.mean"] <- mean(vlf.model.diff[i,"nt.pipo.sum"], vlf.model.diff[i,"nt.piaz.sum"], vlf.model.diff[i,"nt.pine.spp.sum"],vlf.model.diff[i,"nt.pine.dom.sum"], na.rm=T)
+  model.mean.diff[i, "vlf.sd"] <- sqrt(vlf.model.diff[i,"nt.pipo.sd"]^2+ vlf.model.diff[i,"nt.piaz.sd"]^2+ vlf.model.diff[i,"nt.pine.spp.sd"]^2+ vlf.model.diff[i,"nt.pine.dom.sd"]^2)
+}
+summary(model.mean.diff)
+
+
+
+vuf.model.diff<- as.data.frame(vuf.year2)
+
+vuf.model.diff[,2:ncol(vuf.model.diff)]<-NA
+
+
+
+for(j in 2:ncol(vuf.year2)) {
+  for( i in 2:length(vuf.model.diff[,j])){
+    vuf.model.diff[i,j] <- ifelse(i-1 > 0, vuf.year2[i,j] - vuf.year2[i-1,j], NA) 
+  }
+}
+
+for(i in 1:length(vlf.model.diff$year)){
+  model.mean.diff[i, "vuf.mean"] <- mean(vuf.model.diff[i,"nt.spruce.sum"], vuf.model.diff[i,"nt.vcnp.sum"], vuf.model.diff[i,"nt.mixed.con.sum"], na.rm=T)
+  model.mean.diff[i, "vuf.sd"] <- sqrt(vuf.model.diff[i,"nt.spruce.sd"]^2+vuf.model.diff[i,"nt.vcnp.sd"]^2+ vuf.model.diff[i,"nt.mixed.con.sd"]^2)
+}
+
+summary(model.mean.diff)
+
+model.mean.diff$vlf.mean.area <- model.mean.diff$vlf.mean/768
+model.mean.diff$vlf.sd.area <- model.mean.diff$vlf.sd/768
+model.mean.diff$vuf.mean.area <- model.mean.diff$vuf.mean/1152
+model.mean.diff$vuf.sd.area <- model.mean.diff$vuf.sd/1152
+
+summary(model.mean.diff)
+summary(inter.diff2)
+plot(model.mean.diff$vlf.mean.area ~ inter.diff2$year, type="l", xlim=c(2000,2011))
+plot(model.mean.diff$vuf.mean.area ~ inter.diff2$year, type="l", xlim=c(2000,2011))
+
+
+#######################################
+#writing csv's for the files used in the bootstrapping process, and the files produced by the bootstrap
+#######################################
+write.csv(vlf.year2, "vlf.boot.biomass.csv")
+write.csv(vuf.year2, "vlf.boot.biomass.csv")
+write.csv(dbh.recon.vuf.tree, "vuf.stacked.dbh.csv")
+write.csv(dbh.recon.vlf.tree, "vlf.stacked.dbh.csv")

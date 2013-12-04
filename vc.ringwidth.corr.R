@@ -15,6 +15,26 @@ vlf.all <- read.csv("vlfall-30yrspline.csv", header=T)
 #looking at whole plots for this
 #for plot by plot look at valles_timeseries_analysis.r
 ####################################################
+par(new=F)
+for(j in 2:ncol(cru.mean.temp)){
+  ccf(cru.mean.temp[65:109,j], cru.mean.temp[65:109,j], type="correlation", lag.max=10)
+  par(new=F)  
+}
+
+par(new=F)
+for(j in 2:ncol(cru.precip)){
+  ccf(cru.precip[65:109,j], cru.precip[65:109,j], type="correlation", lag.max=10)
+  par(new=F)  
+}
+
+par(new=F)
+for(j in 2:ncol(vc.pdsi)){
+  ccf(vc.pdsi[113:158,j], vc.pdsi[113:158,j], type="correlation", lag.max=10)
+  par(new=F)  
+}
+
+ccf(snotel$sd.swe, snotel$sd.swe, type="correlation", lag.max=10)
+
 
 #VLF site
 ccf(vlf.all$std[37:83], vlf.all$std[37:83], type = "correlation")
