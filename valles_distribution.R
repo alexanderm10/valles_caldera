@@ -111,7 +111,8 @@ dbh.bins1 <- seq(0, max(all.valles$dbh, na.rm=T), 2) # 5 year bins based on the 
 qplot(x=dbh, data=all.valles, geom="histogram", breaks=dbh.bins1, fill=spp) + facet_grid(site ~ .) + theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12)) + scale_x_continuous(name="DBH") + ggtitle("Size Distribution") #+ scale_fill_manual(values=as.vector(spp.col.tree$Color))
 
 # Plotting species by Dated or Not
-qplot(x=dbh, data=all.valles, geom="histogram", breaks=dbh.bins1, fill=Dated) + facet_grid(site ~ .) + theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12)) + scale_x_continuous(name="DBH") + ggtitle("Size Distribution") + scale_fill_manual(values=c("gray80", "blue"))
+qplot(x=dbh, data=all.valles, geom="histogram", breaks=dbh.bins1, fill=Dated) + facet_grid(site ~ .) + theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12)) + scale_x_continuous(name="DBH") + ggtitle("Size Distribution") + scale_fill_manual(values=c("gray80", "blue"))+
+  poster.theme
 
 # Plotting species by Dated or Not, removing saplings
 #qplot(x=DBH, data=tree.data2[!tree.data2$Site=="IRN" & tree.data2$DBH>5,], geom="histogram", breaks=dbh.bins1, fill=Dated) + facet_grid(Site ~ .) + theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12)) + scale_x_continuous(name="DBH") + ggtitle("Size Distribution") + scale_fill_manual(values=c("gray80", "gray30"))
@@ -1635,6 +1636,9 @@ poster.theme<-theme(axis.line=element_line(color="black"), panel.grid.major=elem
               axis.title.y=element_text(face="bold", size=24), strip.text=element_text(face="bold", size=rel(1.75)),
               title=element_text(face="bold", size=28))
 
+
+#adjusted biomass in kg to account for plot area
+#units now in kg of Biomass per m^2
 vlf.year3<- vlf.year2[,2:ncol(vlf.year2)]/768
 vlf.year3$year<- vlf.year2$year
 
@@ -1677,6 +1681,8 @@ poster.theme
 #scale_color_manual(values=c("red", "blue", "orange", "green")) 
 vlf.plot+ggtitle("Lower Flux Tower")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")
 
+#adjusted biomass in kg to account for plot area
+#units now in kg of Biomass per m^2
 vuf.year3<-as.data.frame(vuf.year2[,2:ncol(vuf.year2)]/1152)
 vuf.year3$year<-vuf.year2$year
 
@@ -1769,14 +1775,15 @@ mean.plot<- ggplot()  +
   geom_errorbar(data=current.mean, aes(x=2012, ymin=vuf.mean - 1.96*vuf.sd, ymax=vuf.mean + 1.96*vuf.sd), color="blue")+
   
   # all of that theme stuff you can just pre-set
-  theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))
+  poster.theme
+  #theme(axis.line=element_line(color="black", size=0.5), panel.grid.major=element_blank(), panel.grid.minor= element_blank(), panel.border= element_blank(), panel.background= element_blank(), axis.text.x=element_text(angle=0, color="black", size=12), axis.text.y=element_text(color="black", size=12))
   #scale_fill_discrete(name="Model", labels = c("nt.pipo.sum", "nt.piaz.sum", "nt.pine.spp", "nt.vcnp.sum", "nt.pine.dom.sum"))
 
 # telling what colors to make the lines for species
 #scale_color_manual(values=c("red", "blue", "orange", "green")) 
-mean.plot+ggtitle("Mean Biomass")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")
+mean.plot+ggtitle("Ensemble Biomass")+scale_y_continuous("kg Biomass")+scale_x_continuous("Year")
 
-#Convert all cumulative biomass to megagrams
+#Plot biomass in kilograms
 #divide all biomass by the area of the respective plots
 #upper site: 24m x 24m plots = 1152 m2 combined plot area
 #lower site: p1=12m x 12m; p2= 26m x 24 m; 768m2 combined plot area

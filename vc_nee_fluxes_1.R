@@ -113,18 +113,18 @@ plot(fc~year, data=vcp.fc.year, pch=16)
 nee.plot<- ggplot()  +
   # plotting total site basal area
   
-  geom_ribbon(data=model.mean.diff, aes(x=c(2000:2012), ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), alpha=0.15, fill="black")+
-  #geom_ribbon(data=model.mean.diff, aes(x=year, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), alpha=0.15, fill="blue")+
+  #geom_ribbon(data=model.mean.diff, aes(x=year, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), alpha=0.15, fill="black")+
+  geom_ribbon(data=model.mean.diff, aes(x=year, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), alpha=0.15, color="black")+
   
-  geom_line(data=model.mean.diff,  aes(x=c(2000:2012), y=vuf.mean.area), size=1.5, colour="black") +
+  geom_line(data=model.mean.diff, aes(x=year, y=vuf.mean.area), size=1.5, color="black") +
   #geom_line(data= model.mean, aes(x=year, y=vuf.mean.area), size=1.5, colour="blue") +
   
   
-  geom_point(data=vcm.fc.year2, aes(x=year, y=fc*-1, size=4, colour="blue"))+
+  geom_point(data=vcm.fc.year2, aes(x=year, y=fc*-1, size=10, color="blue"))+
   #geom_point(data=current.mean, aes(x=2012, y=vuf.mean.area), size=4, colour="blue")+
   
   
-  geom_errorbar(data=vcm.fc.year2,aes(x=year, ymin=(fc - 1.96*sd.fc)*-1, ymax=(fc + 1.96*sd.fc)*-1, color="blue"))+
+  #geom_errorbar(data=vcm.fc.year2,aes(x=year, ymin=(fc - 1.96*sd.fc)*-1, ymax=(fc + 1.96*sd.fc)*-1, size=0.5))+
   #geom_errorbar(data=current.mean, aes(x=2012, ymin=(vuf.mean.area - 1.96*vuf.sd.area), ymax=(vuf.mean.area + 1.96*vuf.sd.area)), color="blue")+
   
   # all of that theme stuff you can just pre-set
@@ -135,4 +135,8 @@ nee.plot<- ggplot()  +
 # telling what colors to make the lines for species
 #scale_color_manual(values=c("red", "blue", "orange", "green")) 
              
-nee.plot+ggtitle("Productivity Comparison")+scale_y_continuous("kg Biomass m-2")+scale_x_continuous("Year")
+nee.plot+ggtitle("Productivity Comparison")+scale_y_continuous("kg Biomass m-2", limits=c(0,0.5))+scale_x_continuous(name="Year", limits=c(2000, 2011))
+vcm.fc.year2
+
+temp1<- merge(vcm.fc.year2, model.mean.diff)
+temp1$perc<- temp1$vuf.mean.area/temp1$fc
